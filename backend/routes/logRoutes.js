@@ -4,6 +4,6 @@ import { authMiddleware } from "../middlewares/authMiddleware.js";
 const router = Router();
 
 router.post("/createlog", createLog);
-router.get("/getlogs", authMiddleware, getLogs);
+router.get("/getlogs", getLogs);
 
 export default router;
