@@ -1,80 +1,85 @@
 import win32evtlog
-import requests
+import win32con
+import win32evtlogutil
 import time
-import datetime
-
+import requests
 
 
 def storeLogs(event_type, event_id, t):
-    # payload = {
-    #     "userId": '677fb5ab967f6fa7fffca823',
-    #     "action": event,
-    # }
-    # logs = requests.post('http://localhost:5000/api/logs/createlog', json={payload}, headers={"Content-Type0": "application/json"})
-    # print(logs)
-    with open("A:/Beautiful Pain/Projects/AI Logs Analyzer/logs-analyzer/dist/event_log.txt", "a") as log_file:
-        log_file.write(f"\nEvent ID: {event_id} | Type: {event_type} | Time: {t}\n")
 
-def track_logon_logoff():
-
-
-    try:    
-        server = 'localhost'  # Local machine
-        log_type = 'Security'  # Security log contains login/logout events
-
-        # Open the event log
-        handle = win32evtlog.OpenEventLog(server, log_type)
-        flags = win32evtlog.EVENTLOG_FORWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
-        last_record = win32evtlog.GetOldestEventLogRecord(handle)
-        print("Last Record: ", last_record)
-
-        print("Tracking login and logout events... Press Ctrl+C to stop.")
-        while True:
-            total_records = win32evtlog.GetNumberOfEventLogRecords(handle)
-            print("Total Records",total_records)
-            ''' 
-            for event in events:
-                if event.EventID == 4648:  # Successful login
-                    print(f"Logon: User: {event.StringInserts[5]}, Time: {event.TimeGenerated}")
-                    
-                    storeLogs("login", event.EventID, event.TimeGenerated)
-                if event.EventID == 4624:  # Successful login
-                    print(f"Logon: User: {event.StringInserts[5]}, Time: {event.TimeGenerated}")
-                    
-                    storeLogs("Login: ", event.EventID, event.TimeGenerated)
-
-
-                elif event.EventID == 4647:  # Logoff
-                    print(f"Logoff: User: {event.StringInserts[5]}, Time: {event.TimeGenerated}")
-                    storeLogs("Logout", event.EventID,event.TimeGenerated)
-                '''
-            
-            # Event ID: 4624 | Type: login | Time: 2025-01-13 13:51:21
-            if last_record <= total_records:
-                events = win32evtlog.ReadEventLog(handle, flags, last_record)
-                for event in events:
-                    if event.EventID in [4624, 4647, 4648]:  # Handle both login and logoff events
-                        if event.StringInserts and len(event.StringInserts) > 5:
-                            user = event.StringInserts[5]
-                        else:
-                            user = "Unknown"  # Fallback if user information is unavailable
-                        if event.EventID == 4624:  # Successful login
-                            print(f"Logon: User: {user}, Time: {event.TimeGenerated}")
-                            storeLogs("login", event.EventID, event.TimeGenerated)
-                        if event.EventID == 4648:  # Successful login
-                            print(f"Logon: User: {user}, Time: {event.TimeGenerated}")
-                            storeLogs("Cred Login", event.EventID, event.TimeGenerated)
-                        elif event.EventID == 4647:  # Logoff
-                            print(f"Logoff: User: {user}, Time: {event.TimeGenerated}")
-                            storeLogs("logout", event.EventID, event.TimeGenerated)
-                last_record += len(events)
-            time.sleep(0.2)  # Check logs every 2 seconds
-            #Event ID: 4624 | Type: login | Time: 2025-01-12 17:36:19
-    except Exception as e:
-        storeLogs("Exception: ", e, datetime.datetime.now())
-if __name__ == "__main__":
     try:
-        track_logon_logoff()
+        response = requests.post("http://localhost:5000/api/logs/createlog", json={"userId": '677fb5ab967f6fa7fffca823', "action": event_type, "time": t, "details": "None"})    
+        print(response)
     except Exception as e:
         print(e)
-        storeLogs("No records", 404)
+def monitor_login_events():
+    """
+    Monitor Windows Security log for real-time login/logout events.
+    Returns the latest login/logout event when detected.
+    """
+    server = 'localhost'
+    logtype = 'Security'
+    flags = win32evtlog.EVENTLOG_FORWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
+
+    # Event IDs for login/logout events
+    LOGIN_EVENT_IDS = {
+        4624: "Login",        # Successful login
+        4634: "Logout",       # Successful logout
+        4647: "User initiated logout"
+    }
+
+    def get_last_event():
+        hand = win32evtlog.OpenEventLog(server, logtype)
+        flags = win32evtlog.EVENTLOG_BACKWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
+        total = win32evtlog.GetNumberOfEventLogRecords(hand)
+        
+        events = win32evtlog.ReadEventLog(hand, flags, 0)
+        
+        for event in events:
+            if event.EventID in LOGIN_EVENT_IDS:
+                event_type = LOGIN_EVENT_IDS[event.EventID]
+                time_generated = event.TimeGenerated.Format()
+                user = ''
+                
+                # Get user information if available
+                try:
+                    for data in event.StringInserts:
+                        if '@' in data or '\\' in data:  # Usually indicates username
+                            user = data
+                            break
+                except:
+                    user = "Unknown"
+                
+                win32evtlog.CloseEventLog(hand)
+                return {
+                    'event_type': event_type,
+                    'time': time_generated,
+                    'user': user,
+                    'event_id': event.EventID
+                }
+        
+        win32evtlog.CloseEventLog(hand)
+        return None
+
+    last_event = None
+    print("Monitoring for login/logout events...")
+    
+    while True:
+        current_event = get_last_event()
+        
+        if current_event and (not last_event or 
+                            current_event['time'] != last_event['time'] or 
+                            current_event['event_id'] != last_event['event_id']):
+            print(f"\nNew {current_event['event_type']} event detected:")
+            print(f"Time: {current_event['time']}")
+            print(f"User: {current_event['user']}")
+            print(f"Event ID: {current_event['event_id']}")
+            last_event = current_event
+            storeLogs(current_event["event_type"].lower(), current_event['event_id'], current_event['time'])
+        time.sleep(1)  # Check every second
+
+if __name__ == "__main__":
+    try:
+        monitor_login_events()
+    except KeyboardInterrupt:
+        print("\nMonitoring stopped.")
