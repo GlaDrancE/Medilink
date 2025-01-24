@@ -38,22 +38,3 @@ const sendEmail = async ({ to, subject, text, html }) => {
 };
 
 export default sendEmail;
-
-
-// import sendEmail from './utils/email.js';
-
-// const testEmail = async () => {
-//     try {
-//         await sendEmail({
-//             to: 'recipient@example.com',
-//             subject: 'Test Email from AI Login Tracker',
-//             text: 'This is a test email sent using Nodemailer.',
-//             html: '<p>This is a <strong>test email</strong> sent using Nodemailer.</p>',
-//         });
-//         console.log('Test email sent successfully');
-//     } catch (error) {
-//         console.error('Error sending test email:', error.message);
-//     }
-// };
-
-// testEmail();

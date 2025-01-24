@@ -7,10 +7,11 @@ import requests
 
 def storeLogs(event_type, event_id, t):
     try:
-        response = requests.post("http://127.0.0.1:5000/logs", json={"userId": '677fb5ab967f6fa7fffca823', "action": event_type, "time": t, "details": "None"})    
+        response = requests.post("http://127.0.0.1:5000/logs", json={"userId": '677f6d6f2704bd7482ed8b96', "action": event_type, "time": t, "details": "None"})    
         print(response)
     except Exception as e:
         print(e)
+
 def monitor_login_events():
     """
     Monitor Windows Security log for real-time login/logout events.

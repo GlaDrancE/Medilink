@@ -2,16 +2,51 @@ import User from "../models/User.js";
 import pkg from "jsonwebtoken";
 const { sign } = pkg;
 import { compare } from "bcrypt";
+import { body, validationResult } from 'express-validator';
 
-export async function register(req, res) {
-  const { username, email, password } = req.body;
-  try {
-    const user = await User.create({ username, email, password });
-    res.status(201).json({ success: true, user });
-  } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+export const register = [
+  // Validation rules
+  body('username')
+    .notEmpty().withMessage('Username is required')
+    .isLength({ min: 3 }).withMessage('Username must be at least 3 characters long'),
+  body('email')
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Invalid email address'),
+  body('password')
+    .notEmpty().withMessage('Password is required')
+    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+
+  // Handle the request
+  async (req, res) => {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { username, email, password } = req.body;
+
+    try {
+      // Check if the email is already registered
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ success: false, error: 'Email is already registered' });
+      }
+
+      // Create a new user
+      const user = await User.create({ username, email, password });
+
+      // Generate a JWT token
+      const token = sign({ id: user._id }, "cumondaddy", { expiresIn: "1d" });
+
+      // Send success response
+      res.status(201).json({ success: true, user, token });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
   }
-}
+];
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -22,7 +57,7 @@ export async function login(req, res) {
     const isMatch = await compare(password, user.password);
     if (!isMatch) throw new Error("Invalid email or password");
 
-    const token = sign({ id: user._id }, "ayush", { expiresIn: "1d" });
+    const token = sign({ id: user._id }, "cumondaddy", { expiresIn: "1d" });
     res.status(200).json({ success: true, token });
   } catch (error) {
     res.status(401).json({ success: false, error: error.message });

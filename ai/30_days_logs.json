@@ -1,0 +1,174 @@
+[
+    {
+        "anomaly": false,
+        "_id": "677f6fff2704bd7482ed8b9d",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": {
+            "name": "Sanket",
+            "IpAddress": "127.0.0.1"
+        },
+        "timestamp": "2025-01-09T06:43:11.606Z",
+        "__v": 0
+    },
+    {
+        "anomaly": false,
+        "_id": "6792077c8a334f3216be1c17",
+        "userId": "677fb5ab967f6fa7fffca823",
+        "action": "login",
+        "details": "None",
+        "timestamp": "2025-01-23T09:10:20.144Z",
+        "__v": 0
+    },
+    {
+        "anomaly": false,
+        "_id": "6792077f8a334f3216be1c19",
+        "userId": "677fb5ab967f6fa7fffca823",
+        "action": "logout",
+        "details": "None",
+        "timestamp": "2025-01-23T09:10:23.214Z",
+        "__v": 0
+    },
+    {
+        "anomaly": false,
+        "_id": "679207df8a334f3216be1c1b",
+        "userId": "677fb5ab967f6fa7fffca823",
+        "action": "login",
+        "details": "None",
+        "timestamp": "2025-01-23T09:11:59.814Z",
+        "__v": 0
+    },
+    {
+        "_id": "679222751b58164c5bb40de5",
+        "action": "login",
+        "timestamp": "2025-01-23T16:35:25.539Z",
+        "details": {
+            "ip": "192.168.1.1",
+            "device": "Chrome Browser"
+        },
+        "anomaly": false
+    },
+    {
+        "_id": "6792247023d9eadd0d3df42e",
+        "action": "login",
+        "timestamp": "2025-01-23T16:43:52.632Z",
+        "details": {
+            "ip": "192.168.1.1",
+            "device": "Chrome Browser"
+        },
+        "anomaly": false
+    },
+    {
+        "_id": "679226222c741d601b271ad4",
+        "action": "login",
+        "timestamp": "2025-01-23T16:51:06.814Z",
+        "details": {
+            "ip": "192.168.1.1",
+            "device": "Chrome Browser"
+        },
+        "anomaly": false
+    },
+    {
+        "_id": "679226ae2c741d601b271ad5",
+        "action": "login",
+        "timestamp": "2025-01-23T16:53:26.831Z",
+        "details": {
+            "ip": "192.168.1.1",
+            "device": "Chrome Browser"
+        },
+        "anomaly": false
+    },
+    {
+        "_id": "67923f6bfe2330ce29200f95",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": {
+            "ip": "192.168.1.1",
+            "device": "Chrome Browser"
+        },
+        "anomaly": true,
+        "timestamp": "2025-01-23T13:08:59.229Z",
+        "__v": 0
+    },
+    {
+        "_id": "679318980fabb32f0515e993",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:35:36.409Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931adb0fabb32f0515e99c",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:45:15.154Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931b180fabb32f0515e99f",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:46:16.574Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931b190fabb32f0515e9a1",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "logout",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:46:17.633Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931b330fabb32f0515e9a3",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "logout",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:46:43.300Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931b3b0fabb32f0515e9a6",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:46:51.415Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931d470fabb32f0515e9b0",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:55:35.820Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931d490fabb32f0515e9b3",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T04:55:37.875Z",
+        "__v": 0
+    },
+    {
+        "_id": "67931ef40fabb32f0515e9b6",
+        "userId": "677f6d6f2704bd7482ed8b96",
+        "action": "login",
+        "details": "None",
+        "anomaly": false,
+        "timestamp": "2025-01-24T05:02:44.547Z",
+        "__v": 0
+    }
+]

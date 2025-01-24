@@ -9,6 +9,11 @@ const logSchema = new Schema({
   },
   timestamp: { type: Date, default: Date.now },
   details: { type: Object },
+  anomaly: {
+    type: Boolean,
+    default: false,
+    required: true,
+  }
 });
 
 export default model("Log", logSchema);

@@ -7,14 +7,16 @@ import numpy as np
 import requests
 import Dashboard
 
-def showMainWindow(frame):
+def handleLogout():
+    # Destroy the current frames
+    for widget in root.winfo_children():
+        widget.destroy()
+    
+    # Show the login screen
+    showLoginScreen()
+    
+def showMainWindow(frame, token):
     frame.destroy()
-    #root=CTkToplevel(loginWindow, fg_color='#FFFAFA')
-    #root.title("SystemLogAI")
-    #root.geometry("1500x800+10+20")
-    #root.resizable(False,False)
-    #set_appearance_mode("light")
-
     frame1 = CTkFrame(master=root,
                       fg_color='#FFFAFA',
                       height=780,
@@ -31,7 +33,7 @@ def showMainWindow(frame):
                       corner_radius=15)
     frame2.place(x=390, y=10)
 
-    Dashboard.display(frame2)
+    Dashboard.display(frame2, token)
 
     headLabel = CTkLabel(master=root,
                          text_color='black',
@@ -103,118 +105,311 @@ def showMainWindow(frame):
 
     logoutImage = Image.open('logout.png')
     logoutButton = CTkButton(master=frame1,
-                             text='Log-out',
-                             font=('Calibri', 20),
-                             text_color='#000000',
-                             fg_color='transparent',
-                             corner_radius=8,
-                             hover_color='#DCDCDC',
-                             image=CTkImage(light_image=logoutImage),
-                             width=330, anchor=tk.W)
+                         text='Log-out',
+                         font=('Calibri', 20),
+                         text_color='#000000',
+                         fg_color='transparent',
+                         corner_radius=8,
+                         hover_color='#DCDCDC',
+                         image=CTkImage(light_image=logoutImage),
+                         width=330, anchor=tk.W,
+                         command=handleLogout)  # Call handleLogout when clicked
     logoutButton.place(x=30, y=350)
 
+def showRegistrationScreen():
+    global frame  # Declare 'frame' as global at the beginning of the function
+    if 'frame' in globals():
+        frame.destroy()
 
-
-root=CTk(fg_color='#FFFAFA')
-root.title("SystemLogAI")
-root.geometry("1500x800+10+20")
-set_appearance_mode("light")
-
-frame = CTkFrame(master=root,
-                  fg_color='#FFFAFA',
-                  height=380,
-                  width=400,
-                  border_width=1,
-                  corner_radius=15)
-frame.place(x=550,y=150)
-
-loginLabel = CTkLabel(master=frame,
-                     text_color='black',
-                     text='LOG-IN',
-                     font=('Calibri', 30, 'bold'),
-                     bg_color='#FFFAFA')
-loginLabel.place(x=160, y=40)
-
-usernameLabel = CTkLabel(master=frame,
-                     text_color='black',
-                     text='Username',
-                     font=('Calibri', 15),
-                     bg_color='#FFFAFA')
-usernameLabel.place(x=20, y=80)
-
-usernameBox = CTkEntry(master=frame,
-                     text_color='black',
-                     width=360,
-                     height=40,
+    # Create a new frame for the registration screen
+    frame = CTkFrame(master=root,
+                     fg_color='#FFFAFA',
+                     height=500,
+                     width=400,
                      border_width=1,
-                     fg_color='transparent',
-                     corner_radius=10,
-                     font=('Calibri', 14))
-usernameBox.place(x=20, y=110)
+                     corner_radius=15)
+    frame.place(x=550, y=150)
 
-passwordLabel = CTkLabel(master=frame,
-                     text_color='black',
-                     text='Password',
-                     font=('Calibri', 15),
-                     bg_color='#FFFAFA')
-passwordLabel.place(x=20, y=170)
+    # Registration Title
+    registrationLabel = CTkLabel(master=frame,
+                                 text_color='black',
+                                 text='REGISTER',
+                                 font=('Calibri', 30, 'bold'),
+                                 bg_color='#FFFAFA')
+    registrationLabel.place(x=140, y=40)
 
-passwordBox = CTkEntry(master=frame,
-                     width=360,
-                     height=40,
+    # Username Field
+    usernameLabel = CTkLabel(master=frame,
+                             text_color='black',
+                             text='Username',
+                             font=('Calibri', 15),
+                             bg_color='#FFFAFA')
+    usernameLabel.place(x=20, y=80)
+
+    global usernameBox
+    usernameBox = CTkEntry(master=frame,
+                           text_color='black',
+                           width=360,
+                           height=40,
+                           border_width=1,
+                           fg_color='transparent',
+                           corner_radius=10,
+                           font=('Calibri', 14))
+    usernameBox.place(x=20, y=110)
+
+    # Email Field
+    emailLabel = CTkLabel(master=frame,
+                          text_color='black',
+                          text='Email',
+                          font=('Calibri', 15),
+                          bg_color='#FFFAFA')
+    emailLabel.place(x=20, y=170)
+
+    global emailBox
+    emailBox = CTkEntry(master=frame,
+                        text_color='black',
+                        width=360,
+                        height=40,
+                        border_width=1,
+                        fg_color='transparent',
+                        corner_radius=10,
+                        font=('Calibri', 14))
+    emailBox.place(x=20, y=200)
+
+    # Password Field
+    passwordLabel = CTkLabel(master=frame,
+                             text_color='black',
+                             text='Password',
+                             font=('Calibri', 15),
+                             bg_color='#FFFAFA')
+    passwordLabel.place(x=20, y=260)
+
+    global passwordBox
+    passwordBox = CTkEntry(master=frame,
+                           width=360,
+                           height=40,
+                           border_width=1,
+                           fg_color='transparent',
+                           corner_radius=10,
+                           font=('Calibri', 14),
+                           text_color='black',
+                           show="*")
+    passwordBox.place(x=20, y=290)
+
+    # Register Button
+    registerButton = CTkButton(master=frame,
+                               text='Register',
+                               font=('Calibri', 18),
+                               text_color='#FFFAFA',
+                               fg_color='#2e4053',
+                               corner_radius=8,
+                               width=360,
+                               height=40,
+                               command=handleRegistration)
+    registerButton.place(x=20, y=350)
+
+    # Error Message Label
+    global error_message, error_message_label
+    error_message = tk.StringVar()
+    error_message_label = CTkLabel(master=frame,
+                                   textvariable=error_message,
+                                   text_color='red',
+                                   font=('Calibri', 12),
+                                   bg_color='#FFFAFA')
+    error_message_label.place(x=20, y=400)
+
+    # Login Link
+    loginLink = CTkLabel(master=frame,
+                         text="Already have an account? Login here",
+                         text_color='blue',
+                         font=('Calibri', 12),
+                         cursor="hand2",
+                         bg_color='#FFFAFA')
+    loginLink.place(x=100, y=440)
+    loginLink.bind("<Button-1>", lambda e: showLoginScreen())
+
+def showLoginScreen():
+    global frame  # Declare 'frame' as global at the beginning of the function
+    if 'frame' in globals():
+        frame.destroy()
+
+    # Create a new frame for the login screen
+    frame = CTkFrame(master=root,
+                     fg_color='#FFFAFA',
+                     height=410,
+                     width=400,
                      border_width=1,
-                     fg_color='transparent',
-                     corner_radius=10,
-                     font=('Calibri', 14),
-                     text_color='black')
-passwordBox.place(x=20, y=200)
+                     corner_radius=15)
+    frame.place(x=550, y=150)
 
-forgotPasswordButton = CTkButton(master=frame,
-                       text='Forgot Password?',
-                       font=('Calibri', 12),
-                       text_color='#000000',
-                       fg_color='transparent',
-                       corner_radius=8,
-                       hover_color='#FFFAFA',
-                       width=50, anchor=tk.N)
-forgotPasswordButton.place(x=285, y=240)
+    # Login Title
+    loginLabel = CTkLabel(master=frame,
+                          text_color='black',
+                          text='LOG-IN',
+                          font=('Calibri', 30, 'bold'),
+                          bg_color='#FFFAFA')
+    loginLabel.place(x=160, y=40)
 
-loginButton = CTkButton(master=frame,
-                         text='Log-in',
-                         font=('Calibri', 18),
-                         text_color='#FFFAFA',
-                         fg_color='#2e4053',
-                         corner_radius=8,
-                         width=360,
-                         height=40,
-                         command=lambda:handleLogin())
-loginButton.place(x=20, y=290)
+    # Email Field
+    emailLabel = CTkLabel(master=frame,
+                          text_color='black',
+                          text='Email',
+                          font=('Calibri', 15),
+                          bg_color='#FFFAFA')
+    emailLabel.place(x=20, y=80)
+
+    global usernameBox
+    usernameBox = CTkEntry(master=frame,
+                           text_color='black',
+                           width=360,
+                           height=40,
+                           border_width=1,
+                           fg_color='transparent',
+                           corner_radius=10,
+                           font=('Calibri', 14))
+    usernameBox.place(x=20, y=110)
+
+    # Password Field
+    passwordLabel = CTkLabel(master=frame,
+                             text_color='black',
+                             text='Password',
+                             font=('Calibri', 15),
+                             bg_color='#FFFAFA')
+    passwordLabel.place(x=20, y=170)
+
+    global passwordBox
+    passwordBox = CTkEntry(master=frame,
+                           width=360,
+                           height=40,
+                           border_width=1,
+                           fg_color='transparent',
+                           corner_radius=10,
+                           font=('Calibri', 14),
+                           text_color='black',
+                           show="*")
+    passwordBox.place(x=20, y=200)
+
+    # Forgot Password Button
+    forgotPasswordButton = CTkButton(master=frame,
+                                     text='Forgot Password?',
+                                     font=('Calibri', 12),
+                                     text_color='#000000',
+                                     fg_color='transparent',
+                                     corner_radius=8,
+                                     hover_color='#FFFAFA',
+                                     width=50, anchor=tk.N)
+    forgotPasswordButton.place(x=285, y=240)
+
+    # Login Button
+    loginButton = CTkButton(master=frame,
+                            text='Log-in',
+                            font=('Calibri', 18),
+                            text_color='#FFFAFA',
+                            fg_color='#2e4053',
+                            corner_radius=8,
+                            width=360,
+                            height=40,
+                            command=handleLogin)
+    loginButton.place(x=20, y=290)
+
+    # Error Message Label
+    global error_message, error_message_label
+    error_message = tk.StringVar()
+    error_message_label = CTkLabel(master=frame,
+                                   textvariable=error_message,
+                                   text_color='red',
+                                   font=('Calibri', 12),
+                                   bg_color='#FFFAFA')
+    error_message_label.place(x=20, y=340)
+
+    # Registration Link
+    registrationLink = CTkLabel(master=frame,
+                                text="Don't have an account? Register here",
+                                text_color='blue',
+                                font=('Calibri', 12),
+                                cursor="hand2",
+                                bg_color='#FFFAFA')
+    registrationLink.place(x=100, y=380)
+    registrationLink.bind("<Button-1>", lambda e: showRegistrationScreen())
 
 def handleLogin():
-
-
     user_name = usernameBox.get()
     password = passwordBox.get()
 
-    url='http://localhost:5000'
-    payload={
+    url = 'http://localhost:4000'
+    payload = {
         'email': user_name,
         'password': password,
     }
-    header={
+    header = {
         'Content-Type': "application/json"
     }
+
     try:
         response = requests.post(f"{url}/api/auth/login", json=payload, headers=header)
 
+        if response.status_code == 200:
+            token = response.json().get("token")
+            showMainWindow(frame, token)
+        else:
+            # Display an error message when credentials are incorrect
+            error_message.set("Invalid email or password. Please try again.")
 
-        if(response.status_code ==200):
-            showMainWindow(frame)
     except Exception as e:
         print(e)
-    print(response.text)
-    
+        # Display an error message if an exception occurs
+        error_message.set("An error occurred. Please check your connection.")
 
 
+def handleRegistration():
+    username = usernameBox.get()
+    email = emailBox.get()
+    password = passwordBox.get()
+
+    url = 'http://localhost:4000'
+    payload = {
+        'username': username,
+        'email': email,
+        'password': password,
+    }
+    header = {
+        'Content-Type': "application/json"
+    }
+
+    try:
+        response = requests.post(f"{url}/api/auth/register", json=payload, headers=header)
+
+        if response.status_code == 201:
+            # Registration successful
+            error_message.set("Registration successful! Redirecting to Dashboard...")
+            token = response.json().get("token")
+            root.after(2000, lambda: showMainWindow(frame, token))  # Redirect after 2 seconds
+        elif response.status_code == 400:
+            # Handle validation errors from the backend
+            errors = response.json().get("errors", [])
+            if errors:
+                # Extract error messages and display them
+                error_messages = [error['msg'] for error in errors]
+                error_message.set("\n".join(error_messages))
+            else:
+                # Handle other 400 errors (e.g., duplicate email)
+                error_message.set(response.json().get("error", "Registration failed. Please try again."))
+        else:
+            # Handle other errors
+            error_message.set("Registration failed. Please try again.")
+    except Exception as e:
+        print(e)
+        # Display an error message if an exception occurs
+        error_message.set("An error occurred. Please check your connection.")
+
+# Main Application
 if __name__ == '__main__':
+    root = CTk(fg_color='#FFFAFA')
+    root.title("SystemLogAI")
+    root.geometry("1500x800+10+20")
+    set_appearance_mode("light")
+
+    # Show the Login Screen by default
+    showLoginScreen()
+
     root.mainloop()
