@@ -7,7 +7,7 @@ import requests
 
 def storeLogs(event_type, event_id, t):
     try:
-        response = requests.post("http://127.0.0.1:5000/logs", json={"userId": '677f6d6f2704bd7482ed8b96', "action": event_type, "time": t, "details": "None"})    
+        response = requests.post("http://127.0.0.1:5000/logs", json={"userId": 'vaishaliaurangpure777@gmail.com', "action": event_type, "time": t, "details": {}})    
         print(response)
     except Exception as e:
         print(e)

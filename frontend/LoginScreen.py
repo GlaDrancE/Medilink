@@ -6,15 +6,25 @@ from PIL import Image
 import numpy as np
 import requests
 import Dashboard
+import email_utils
+import wifi_utils
+import threading
+import time
+from getmac import get_mac_address
+import re
+
+
+monitoring_active = True
 
 def handleLogout():
-    # Destroy the current frames
+    global monitoring_active
+    monitoring_active = False
     for widget in root.winfo_children():
         widget.destroy()
     
     # Show the login screen
     showLoginScreen()
-    
+
 def showMainWindow(frame, token):
     frame.destroy()
     frame1 = CTkFrame(master=root,
@@ -124,7 +134,7 @@ def showRegistrationScreen():
     # Create a new frame for the registration screen
     frame = CTkFrame(master=root,
                      fg_color='#FFFAFA',
-                     height=500,
+                     height=550,  # Increased height to accommodate the new field
                      width=400,
                      border_width=1,
                      corner_radius=15)
@@ -196,6 +206,29 @@ def showRegistrationScreen():
                            show="*")
     passwordBox.place(x=20, y=290)
 
+    
+    macAddressLabel = CTkLabel(master=frame,
+                            text_color='black',
+                            text='MAC Address',
+                            font=('Calibri', 15),
+                            bg_color='#FFFAFA')
+    macAddressLabel.place(x=20, y=350)
+
+    global macAddressBox
+    macAddressBox = CTkEntry(master=frame,
+                            text_color='black',
+                            width=360,
+                            height=40,
+                            border_width=1,
+                            fg_color='transparent',
+                            corner_radius=10,
+                            font=('Calibri', 14))
+    macAddressBox.place(x=20, y=380)
+
+    # Add placeholder text
+    macAddressBox.insert(0, "e.g., 6c-24-a6-2b-14-4f")
+    macAddressBox.configure(placeholder_text="e.g., 6c-24-a6-2b-14-4f")
+
     # Register Button
     registerButton = CTkButton(master=frame,
                                text='Register',
@@ -206,7 +239,7 @@ def showRegistrationScreen():
                                width=360,
                                height=40,
                                command=handleRegistration)
-    registerButton.place(x=20, y=350)
+    registerButton.place(x=20, y=440)
 
     # Error Message Label
     global error_message, error_message_label
@@ -216,7 +249,7 @@ def showRegistrationScreen():
                                    text_color='red',
                                    font=('Calibri', 12),
                                    bg_color='#FFFAFA')
-    error_message_label.place(x=20, y=400)
+    error_message_label.place(x=20, y=490)
 
     # Login Link
     loginLink = CTkLabel(master=frame,
@@ -225,8 +258,9 @@ def showRegistrationScreen():
                          font=('Calibri', 12),
                          cursor="hand2",
                          bg_color='#FFFAFA')
-    loginLink.place(x=100, y=440)
+    loginLink.place(x=100, y=520)
     loginLink.bind("<Button-1>", lambda e: showLoginScreen())
+
 
 def showLoginScreen():
     global frame  # Declare 'frame' as global at the beginning of the function
@@ -332,6 +366,45 @@ def showLoginScreen():
     registrationLink.place(x=100, y=380)
     registrationLink.bind("<Button-1>", lambda e: showRegistrationScreen())
 
+
+def monitor_wifi_connection(user_email, user_mac_address):
+    """
+    Continuously monitor the Wi-Fi connection of a device.
+    Send an email only once when the device disconnects.
+    Resume monitoring if the device reconnects.
+    """
+    previously_connected = True  # Track the previous connection state
+    email_sent = False  # Track if the email has been sent
+
+    while True:  # Infinite loop for continuous monitoring
+        is_connected = wifi_utils.is_device_connected(user_mac_address)
+
+        if not is_connected and previously_connected:
+            # Device just disconnected
+            subject = "Wi-Fi Device Disconnected"
+            body = f"Dear User,\n\nYour Wi-Fi device ({user_mac_address}) has been disconnected. If this was unexpected, please check your device.\n\nRegards,\nSystem Log AI Team"
+            email_utils.send_email(user_email, subject, body)
+            print("Wi-Fi is disconnected! Email sent.")
+            email_sent = True  # Mark that the email has been sent
+            previously_connected = False  # Update the connection state
+
+        elif is_connected and not previously_connected:
+            # Device just reconnected
+            print("Wi-Fi is reconnected! Resuming monitoring.")
+            email_sent = False  # Reset the email flag
+            previously_connected = True  # Update the connection state
+
+        elif is_connected and previously_connected:
+            # Device is still connected
+            print("Wi-Fi is connected. Monitoring...")
+
+        time.sleep(60)  # Check every 60 seconds
+
+def start_wifi_monitoring(user_email, user_mac_address):
+    monitor_thread = threading.Thread(target=monitor_wifi_connection, args=(user_email, user_mac_address))
+    monitor_thread.daemon = True
+    monitor_thread.start()
+
 def handleLogin():
     user_name = usernameBox.get()
     password = passwordBox.get()
@@ -350,6 +423,11 @@ def handleLogin():
 
         if response.status_code == 200:
             token = response.json().get("token")
+            user_email = user_name  # Assuming email is the username
+            user_mac_address = response.json().get("macAddress")  # Get MAC address from the response
+
+            start_wifi_monitoring(user_email, user_mac_address)
+
             showMainWindow(frame, token)
         else:
             # Display an error message when credentials are incorrect
@@ -360,17 +438,37 @@ def handleLogin():
         # Display an error message if an exception occurs
         error_message.set("An error occurred. Please check your connection.")
 
+def validate_mac_address(mac_address):
+    """
+    Validate the MAC address format (e.g., 6c-24-a6-2b-14-4f).
+
+    Args:
+        mac_address (str): The MAC address to validate.
+
+    Returns:
+        bool: True if the MAC address is valid, False otherwise.
+    """
+    # Regex pattern for MAC address validation
+    pattern = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+    return re.match(pattern, mac_address) is not None
 
 def handleRegistration():
     username = usernameBox.get()
     email = emailBox.get()
     password = passwordBox.get()
+    mac_address = macAddressBox.get().strip()  # Get MAC address from the input field and remove leading/trailing spaces
+
+    # Validate MAC address format
+    if not validate_mac_address(mac_address):
+        error_message.set("Invalid MAC address format. Please use the format: 6c-24-a6-2b-14-4f")
+        return
 
     url = 'http://localhost:4000'
     payload = {
         'username': username,
         'email': email,
         'password': password,
+        'macAddress': mac_address,  # Include MAC address
     }
     header = {
         'Content-Type': "application/json"

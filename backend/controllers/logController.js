@@ -82,3 +82,21 @@ export async function getSummary(req, res) {
     res.status(400).json({ success: false, error: error.message });
   }
 }
+
+export async function getUser (req, res) {
+  try {
+      const email = req.params.email;
+      const user = await User.findOne({ email });
+
+      if (!user) {
+          return res.status(404).json({ success: false, error: "User not found" });
+      }
+
+      // Return the user's ObjectId
+      res.status(200).json({ success: true, userId: user._id, macAddress: user.macAddress });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+};
+

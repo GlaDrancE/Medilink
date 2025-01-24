@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./logs_analyzer"
+    ]
+}

@@ -15,6 +15,10 @@ export const register = [
   body('password')
     .notEmpty().withMessage('Password is required')
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+  body('macAddress')
+    .notEmpty().withMessage('MAC address is required')
+    .matches(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/)
+    .withMessage('Invalid MAC address format. Use the format: 6c-24-a6-2b-14-4f'),
 
   // Handle the request
   async (req, res) => {
@@ -24,17 +28,17 @@ export const register = [
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { username, email, password } = req.body;
+    const { username, email, password, macAddress } = req.body;
 
     try {
-      // Check if the email is already registered
-      const existingUser = await User.findOne({ email });
+      // Check if the email or MAC address is already registered
+      const existingUser = await User.findOne({ $or: [{ email }, { macAddress }] });
       if (existingUser) {
-        return res.status(400).json({ success: false, error: 'Email is already registered' });
+        return res.status(400).json({ success: false, error: 'Email or MAC address is already registered' });
       }
 
-      // Create a new user
-      const user = await User.create({ username, email, password });
+      // Create a new user with MAC address
+      const user = await User.create({ username, email, password, macAddress });
 
       // Generate a JWT token
       const token = sign({ id: user._id }, "cumondaddy", { expiresIn: "1d" });
@@ -58,8 +62,11 @@ export async function login(req, res) {
     if (!isMatch) throw new Error("Invalid email or password");
 
     const token = sign({ id: user._id }, "cumondaddy", { expiresIn: "1d" });
-    res.status(200).json({ success: true, token });
+
+    // Include MAC address in the response
+    res.status(200).json({ success: true, token, macAddress: user.macAddress });
   } catch (error) {
+    console.log(error);
     res.status(401).json({ success: false, error: error.message });
   }
 }
