@@ -15,10 +15,14 @@ export const register = [
   body('password')
     .notEmpty().withMessage('Password is required')
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+  body('bluetoothAddress')
+    .notEmpty().withMessage('Bluetooth address is required')
+    .matches(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/)
+    .withMessage('Invalid Bluetooth address format. Use the format: a4:55:90:55:cc:03'),
   body('macAddress')
     .notEmpty().withMessage('MAC address is required')
     .matches(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/)
-    .withMessage('Invalid MAC address format. Use the format: 6c-24-a6-2b-14-4f'),
+    .withMessage('Invalid MAC address format. Use the format: a4:55:90:55:cc:03'),
 
   // Handle the request
   async (req, res) => {
@@ -28,17 +32,22 @@ export const register = [
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { username, email, password, macAddress } = req.body;
+    const { username, email, password, bluetoothAddress , macAddress} = req.body;
 
     try {
-      // Check if the email or MAC address is already registered
-      const existingUser = await User.findOne({ $or: [{ email }, { macAddress }] });
+      // Check if the email or Bluetooth address is already registered
+      const existingUser = await User.findOne({ $or: [{ email }, { bluetoothAddress }] });
       if (existingUser) {
-        return res.status(400).json({ success: false, error: 'Email or MAC address is already registered' });
+        return res.status(400).json({ success: false, error: 'Email or Bluetooth address is already registered' });
       }
 
-      // Create a new user with MAC address
-      const user = await User.create({ username, email, password, macAddress });
+      const existingMac = await User.findOne({ macAddress });
+      if (existingMac) {
+        return res.status(400).json({ success: false, error: 'This Device is already registered' });
+      }
+
+      // Create a new user with Bluetooth address
+      const user = await User.create({ username, email, password, bluetoothAddress , macAddress});
 
       // Generate a JWT token
       const token = sign({ id: user._id }, "cumondaddy", { expiresIn: "1d" });
@@ -63,8 +72,8 @@ export async function login(req, res) {
 
     const token = sign({ id: user._id }, "cumondaddy", { expiresIn: "1d" });
 
-    // Include MAC address in the response
-    res.status(200).json({ success: true, token, macAddress: user.macAddress });
+    // Include Bluetooth address in the response
+    res.status(200).json({ success: true, token, bluetoothAddress: user.bluetoothAddress });
   } catch (error) {
     console.log(error);
     res.status(401).json({ success: false, error: error.message });

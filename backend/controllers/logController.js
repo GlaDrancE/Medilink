@@ -64,6 +64,22 @@ export async function getLogs(req, res) {
   }
 }
 
+export async function getEmail(req, res)
+{
+  const { macAddress } = req.body;
+
+  try {
+    const user = await User.findOne({ macAddress: macAddress });
+    if (user) {
+      return res.json({ email: user.email });
+    } else {
+      return res.status(404).json({ error: 'User not found' });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function getSummary(req, res) {
   try {
     const userId = req.user.id; 
@@ -93,10 +109,61 @@ export async function getUser (req, res) {
       }
 
       // Return the user's ObjectId
-      res.status(200).json({ success: true, userId: user._id, macAddress: user.macAddress });
+      res.status(200).json({ success: true, userId: user._id, bluetoothAddress: user.bluetoothAddress });
   } catch (error) {
       console.error(error);
       res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 };
 
+
+export async function getLogCounts(req, res) {
+    try {
+        const userId = req.user.id; 
+
+        // Get the current date and calculate the dates for 5, 10, 15, and 30 days ago
+        const currentDate = new Date();
+        const fiveDaysAgo = new Date(currentDate);
+        fiveDaysAgo.setDate(currentDate.getDate() - 5);
+
+        const tenDaysAgo = new Date(currentDate);
+        tenDaysAgo.setDate(currentDate.getDate() - 10);
+
+        const fifteenDaysAgo = new Date(currentDate);
+        fifteenDaysAgo.setDate(currentDate.getDate() - 15);
+
+        const thirtyDaysAgo = new Date(currentDate);
+        thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+        const getCounts = async (startDate) => {
+            const logs = await Log.find({
+                userId: userId,
+                timestamp: { $gte: startDate, $lte: currentDate },
+            });
+
+            const logins = logs.filter(log => log.action === "login").length;
+            const logouts = logs.filter(log => log.action === "logout").length;
+            const anomalies = logs.filter(log => log.anomaly === true).length;
+
+            return { logins, logouts, anomalies };
+        };
+
+        const fiveDaysCounts = await getCounts(fiveDaysAgo);
+        const tenDaysCounts = await getCounts(tenDaysAgo);
+        const fifteenDaysCounts = await getCounts(fifteenDaysAgo);
+        const thirtyDaysCounts = await getCounts(thirtyDaysAgo);
+
+        res.status(200).json({
+            success: true,
+            counts: {
+                "5_days": fiveDaysCounts,
+                "10_days": tenDaysCounts,
+                "15_days": fifteenDaysCounts,
+                "30_days": thirtyDaysCounts,
+            },
+        });
+    } catch (error) {
+        console.error(`Error fetching log counts: ${error.message}`);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+}

@@ -1,7 +1,6 @@
 from customtkinter import *
 import customtkinter as ctk
 import tkinter as tk
-import os
 from PIL import Image
 import numpy as np
 import requests
@@ -10,8 +9,9 @@ import email_utils
 import wifi_utils
 import threading
 import time
-from getmac import get_mac_address
 import re
+import ReportPage
+import uuid
 
 
 monitoring_active = True
@@ -62,32 +62,22 @@ def showMainWindow(frame, token):
                            hover_color='#DCDCDC',
                            image=CTkImage(light_image=homeImage),
                            width=330, anchor=tk.W,
-                           command=lambda:Dashboard.display(frame2))
+                           command=lambda:Dashboard.display(frame2, token))
     homeButton.place(x=30, y=100)
 
     reportImage = Image.open('report.png')
     reportButton = CTkButton(master=frame1,
-                             text='Reports',
-                             font=('Calibri', 20),
-                             text_color='#000000',
-                             fg_color='transparent',
-                             corner_radius=8,
-                             hover_color='#DCDCDC',
-                             image=CTkImage(light_image=reportImage),
-                             width=330, anchor=tk.W)
+                         text='Reports',
+                         font=('Calibri', 20),
+                         text_color='#000000',
+                         fg_color='transparent',
+                         corner_radius=8,
+                         hover_color='#DCDCDC',
+                         image=CTkImage(light_image=reportImage),
+                         width=330, anchor=tk.W,
+                         command=lambda: ReportPage.showReportScreen(frame2, token))  
     reportButton.place(x=30, y=150)
 
-    settingsImage = Image.open('settings.png')
-    settingsButton = CTkButton(master=frame1,
-                               text='Settings',
-                               font=('Calibri', 20),
-                               text_color='#000000',
-                               fg_color='transparent',
-                               corner_radius=8,
-                               hover_color='#DCDCDC',
-                               image=CTkImage(light_image=settingsImage),
-                               width=330, anchor=tk.W)
-    settingsButton.place(x=30, y=200)
 
     helpImage = Image.open('help.png')
     helpButton = CTkButton(master=frame1,
@@ -99,7 +89,7 @@ def showMainWindow(frame, token):
                            hover_color='#DCDCDC',
                            image=CTkImage(light_image=helpImage),
                            width=330, anchor=tk.W)
-    helpButton.place(x=30, y=250)
+    helpButton.place(x=30, y=200)
 
     feedbackImage = Image.open('feedback.png')
     feedbackButton = CTkButton(master=frame1,
@@ -111,7 +101,7 @@ def showMainWindow(frame, token):
                                hover_color='#DCDCDC',
                                image=CTkImage(light_image=feedbackImage),
                                width=330, anchor=tk.W)
-    feedbackButton.place(x=30, y=300)
+    feedbackButton.place(x=30, y=250)
 
     logoutImage = Image.open('logout.png')
     logoutButton = CTkButton(master=frame1,
@@ -124,7 +114,30 @@ def showMainWindow(frame, token):
                          image=CTkImage(light_image=logoutImage),
                          width=330, anchor=tk.W,
                          command=handleLogout)  # Call handleLogout when clicked
-    logoutButton.place(x=30, y=350)
+    logoutButton.place(x=30, y=300)
+
+    def handleExit():
+        global monitoring_active
+        monitoring_active = False
+        root.destroy()
+        exit(0) 
+
+    exitImage = Image.open('exit.png')
+    exitButton = CTkButton(
+        master=frame1,
+        text='Exit',
+        font=('Calibri', 20),
+        text_color='#000000',
+        fg_color='transparent',
+        corner_radius=8,
+        hover_color='#DCDCDC',
+        image=CTkImage(light_image=exitImage),
+        width=330,
+        anchor=tk.W,
+        command=handleExit  # Calls the exit function
+    )
+    exitButton.place(x=30, y=350)
+
 
 def showRegistrationScreen():
     global frame  # Declare 'frame' as global at the beginning of the function
@@ -207,15 +220,15 @@ def showRegistrationScreen():
     passwordBox.place(x=20, y=290)
 
     
-    macAddressLabel = CTkLabel(master=frame,
+    bluetoothAddressLabel = CTkLabel(master=frame,
                             text_color='black',
-                            text='MAC Address',
+                            text='Bluetooth Address',
                             font=('Calibri', 15),
                             bg_color='#FFFAFA')
-    macAddressLabel.place(x=20, y=350)
+    bluetoothAddressLabel.place(x=20, y=350)
 
-    global macAddressBox
-    macAddressBox = CTkEntry(master=frame,
+    global bluetoothAddressBox
+    bluetoothAddressBox = CTkEntry(master=frame,
                             text_color='black',
                             width=360,
                             height=40,
@@ -223,11 +236,10 @@ def showRegistrationScreen():
                             fg_color='transparent',
                             corner_radius=10,
                             font=('Calibri', 14))
-    macAddressBox.place(x=20, y=380)
+    bluetoothAddressBox.place(x=20, y=380)
 
     # Add placeholder text
-    macAddressBox.insert(0, "e.g., 6c-24-a6-2b-14-4f")
-    macAddressBox.configure(placeholder_text="e.g., 6c-24-a6-2b-14-4f")
+    bluetoothAddressBox.configure(placeholder_text="e.g., a4:55:90:55:cc:03")
 
     # Register Button
     registerButton = CTkButton(master=frame,
@@ -302,6 +314,7 @@ def showLoginScreen():
                            corner_radius=10,
                            font=('Calibri', 14))
     usernameBox.place(x=20, y=110)
+    usernameBox.insert(0, "vaishaliaurangpure777@gmail.com")
 
     # Password Field
     passwordLabel = CTkLabel(master=frame,
@@ -322,6 +335,7 @@ def showLoginScreen():
                            text_color='black',
                            show="*")
     passwordBox.place(x=20, y=200)
+    passwordBox.insert(0, "Vaishali777")
 
     # Forgot Password Button
     forgotPasswordButton = CTkButton(master=frame,
@@ -367,43 +381,47 @@ def showLoginScreen():
     registrationLink.bind("<Button-1>", lambda e: showRegistrationScreen())
 
 
-def monitor_wifi_connection(user_email, user_mac_address):
-    """
-    Continuously monitor the Wi-Fi connection of a device.
-    Send an email only once when the device disconnects.
-    Resume monitoring if the device reconnects.
-    """
-    previously_connected = True  # Track the previous connection state
-    email_sent = False  # Track if the email has been sent
+# def monitor_wifi_connection(user_email, user_blue_address):
+#     """
+#     Continuously monitor the Wi-Fi connection of a device.
+#     Send an email only once when the device disconnects.
+#     Resume monitoring if the device reconnects.
+#     """
+#     previously_connected = True  # Track the previous connection state
+#     email_sent = False  # Track if the email has been sent
 
-    while True:  # Infinite loop for continuous monitoring
-        is_connected = wifi_utils.is_device_connected(user_mac_address)
+#     while True:  # Infinite loop for continuous monitoring
+#         try:
+#             is_connected = wifi_utils.is_device_connected(user_blue_address)
+#         except Exception as e:
+#             print(f"Error checking Wi-Fi connection: {e}")
 
-        if not is_connected and previously_connected:
-            # Device just disconnected
-            subject = "Wi-Fi Device Disconnected"
-            body = f"Dear User,\n\nYour Wi-Fi device ({user_mac_address}) has been disconnected. If this was unexpected, please check your device.\n\nRegards,\nSystem Log AI Team"
-            email_utils.send_email(user_email, subject, body)
-            print("Wi-Fi is disconnected! Email sent.")
-            email_sent = True  # Mark that the email has been sent
-            previously_connected = False  # Update the connection state
 
-        elif is_connected and not previously_connected:
-            # Device just reconnected
-            print("Wi-Fi is reconnected! Resuming monitoring.")
-            email_sent = False  # Reset the email flag
-            previously_connected = True  # Update the connection state
+#         if not is_connected and previously_connected:
+#             # Device just disconnected
+#             subject = "Wi-Fi Device Disconnected"
+#             body = f"Dear User,\n\nYour Wi-Fi device ({user_blue_address}) has been disconnected. If this was unexpected, please check your device.\n\nRegards,\nSystem Log AI Team"
+#             email_utils.send_email(user_email, subject, body)
+#             print("Wi-Fi is disconnected! Email sent.")
+#             email_sent = True  # Mark that the email has been sent
+#             previously_connected = False  # Update the connection state
 
-        elif is_connected and previously_connected:
-            # Device is still connected
-            print("Wi-Fi is connected. Monitoring...")
+#         elif is_connected and not previously_connected:
+#             # Device just reconnected
+#             print("Wi-Fi is reconnected! Resuming monitoring.")
+#             email_sent = False  # Reset the email flag
+#             previously_connected = True  # Update the connection state
 
-        time.sleep(60)  # Check every 60 seconds
+#         elif is_connected and previously_connected:
+#             # Device is still connected
+#             print("Wi-Fi is connected. Monitoring...")
 
-def start_wifi_monitoring(user_email, user_mac_address):
-    monitor_thread = threading.Thread(target=monitor_wifi_connection, args=(user_email, user_mac_address))
-    monitor_thread.daemon = True
-    monitor_thread.start()
+#         time.sleep(60)  # Check every 60 seconds
+
+# def start_wifi_monitoring(user_email, user_blue_address):
+#     monitor_thread = threading.Thread(target=monitor_wifi_connection, args=(user_email, user_blue_address))
+#     monitor_thread.daemon = True
+#     monitor_thread.start()
 
 def handleLogin():
     user_name = usernameBox.get()
@@ -424,9 +442,9 @@ def handleLogin():
         if response.status_code == 200:
             token = response.json().get("token")
             user_email = user_name  # Assuming email is the username
-            user_mac_address = response.json().get("macAddress")  # Get MAC address from the response
+            user_blue_address = response.json().get("bluetoothAddress")  # Get blue address from the response
 
-            start_wifi_monitoring(user_email, user_mac_address)
+            # start_wifi_monitoring(user_email, user_blue_address)
 
             showMainWindow(frame, token)
         else:
@@ -438,36 +456,53 @@ def handleLogin():
         # Display an error message if an exception occurs
         error_message.set("An error occurred. Please check your connection.")
 
-def validate_mac_address(mac_address):
+def validate_blue_address(blue_address):
     """
-    Validate the MAC address format (e.g., 6c-24-a6-2b-14-4f).
+    Validate the Bluetooth address format (e.g., a4:55:90:55:cc:03 or A4-55-90-55-CC-03).
 
     Args:
-        mac_address (str): The MAC address to validate.
+        blue_address (str): The Bluetooth address to validate.
 
     Returns:
-        bool: True if the MAC address is valid, False otherwise.
+        bool: True if the Bluetooth address is valid, False otherwise.
     """
-    # Regex pattern for MAC address validation
+    # Regex pattern for Bluetooth address validation
     pattern = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
-    return re.match(pattern, mac_address) is not None
+    
+    # Check if the address matches the pattern
+    if re.match(pattern, blue_address):
+        return True
+    else:
+        return False
+
+def get_mac_address():
+    """
+    Get the MAC address of the user's device.
+    """
+    mac = uuid.getnode()
+    mac_address = ':'.join(f'{(mac >> i) & 0xff:02x}' for i in range(0, 8 * 6, 8)[::-1])
+    return mac_address
 
 def handleRegistration():
     username = usernameBox.get()
     email = emailBox.get()
     password = passwordBox.get()
-    mac_address = macAddressBox.get().strip()  # Get MAC address from the input field and remove leading/trailing spaces
+    blue_address = bluetoothAddressBox.get().strip()  # Get blue address from the input field and remove leading/trailing spaces
 
-    # Validate MAC address format
-    if not validate_mac_address(mac_address):
-        error_message.set("Invalid MAC address format. Please use the format: 6c-24-a6-2b-14-4f")
+    # Validate blue address format
+    if not validate_blue_address(blue_address):
+        error_message.set("Invalid Bluetooth address format. Please use the format: a4:55:90:55:cc:03")
         return
+
+    # Get the user's MAC address
+    mac_address = get_mac_address()
 
     url = 'http://localhost:4000'
     payload = {
         'username': username,
         'email': email,
         'password': password,
+        'bluetoothAddress': blue_address,  # Include Bluetooth address
         'macAddress': mac_address,  # Include MAC address
     }
     header = {
@@ -499,6 +534,7 @@ def handleRegistration():
         print(e)
         # Display an error message if an exception occurs
         error_message.set("An error occurred. Please check your connection.")
+
 
 # Main Application
 if __name__ == '__main__':

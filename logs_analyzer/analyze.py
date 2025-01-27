@@ -3,11 +3,79 @@ import win32con
 import win32evtlogutil
 import time
 import requests
+import uuid
+
+
+def get_mac_address():
+    """
+    Fetch the system's MAC address dynamically.
+
+    Returns:
+        str: The MAC address of the system.
+    """
+    mac = uuid.getnode()
+    mac_address = ':'.join(format((mac >> i) & 0xff, '02x') for i in range(0, 8 * 6, 8)[::-1])
+    return mac_address
+
+
+def get_email_from_mac(mac_address):
+    """
+    Fetch the email associated with a given MAC address by calling the Express.js API.
+
+    Args:
+        mac_address (str): The MAC address to search for.
+
+    Returns:
+        str: The email address associated with the MAC address, or None if not found.
+    """
+    try:
+        response = requests.post(
+            "http://localhost:4000/logs/get-email",
+            json={"macAddress": mac_address}
+        )
+        if response.status_code == 200:
+            return response.json().get("email")
+        else:
+            print(f"Error: {response.json().get('error')}")
+            return None
+    except Exception as e:
+        print(f"Error fetching email: {e}")
+        return None
+
+
+def storeLogs(event_type, event_id, t):
+    """
+    Store login/logout events by dynamically fetching the email associated with the system's MAC address.
+
+    Args:
+        event_type (str): The type of event (e.g., 'login', 'logout').
+        event_id (int): The event ID from Windows Event Logs.
+        t (str): The time of the event.
+    """
+    mac_address = get_mac_address()
+    email = get_email_from_mac(mac_address)
+    if not email:
+        print("No user found with the given MAC address.")
+        return
+
+    try:
+        response = requests.post(
+            "http://127.0.0.1:5000/logs",
+            json={
+                "userId": email,
+                "action": event_type,
+                "time": t,
+                "details": {},
+            }
+        )
+        print(response)
+    except Exception as e:
+        print(f"Error storing logs: {e}")
 
 
 def storeLogs(event_type, event_id, t):
     try:
-        response = requests.post("http://127.0.0.1:5000/logs", json={"userId": 'vaishaliaurangpure777@gmail.com', "action": event_type, "time": t, "details": {}})    
+        response = requests.post("http://127.0.0.1:5000/logs", json={"userId": 'yatharthaurangpure27@gmail.com', "action": event_type, "time": t, "details": {}})    
         print(response)
     except Exception as e:
         print(e)
