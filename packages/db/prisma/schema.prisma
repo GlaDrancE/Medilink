@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Doctor {
+  id              String          @id @default(uuid())
+  name            String
+  email           String?         @unique
+  password        String
+  address         String?
+  license_number  String?
+  specialization  String?
+  experience      Int?
+  bio             String?
+  profile_picture String?
+  is_active       Boolean         @default(true)
+  is_verified     Boolean         @default(false)
+  is_approved     Boolean         @default(false)
+  is_rejected     Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  Patients        Patient[]
+  Prescriptions   Prescriptions[]
+}
+
+model Patient {
+  id              String    @id @default(uuid())
+  doctor_id       String?
+  name            String?
+  email           String?
+  password        String?
+  phone           String
+  address         String?
+  gender          String?
+  age             Int?
+  weight          Int?
+  date_of_birth   DateTime?
+  blood_group     String?
+  allergies       String[]
+  medical_history String[]
+  is_active       Boolean   @default(true)
+  doctor          Doctor?   @relation(fields: [doctor_id], references: [id])
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  Prescriptions Prescriptions[]
+}
+
+model Prescriptions {
+  id                String     @id @default(uuid())
+  index             Int        @default(0)
+  patient_id        String
+  doctor_id         String
+  prescription_date DateTime   @default(now())
+  prescription_text String
+  is_active         Boolean    @default(true)
+  patient           Patient    @relation(fields: [patient_id], references: [id])
+  doctor            Doctor     @relation(fields: [doctor_id], references: [id])
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  medicine_list     Medicine[]
+}
+
+enum FoodTiming {
+  BEFORE
+  AFTER
+}
+
+model Medicine {
+  id                String        @id @default(uuid())
+  name              String
+  dosage            Json
+  time              DateTime
+  before_after_food FoodTiming
+  prescription_id   String
+  prescription      Prescriptions @relation(fields: [prescription_id], references: [id])
+}
