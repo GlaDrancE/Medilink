@@ -9,11 +9,11 @@ export const sendOTP = async (req: Request, res: Response) => {
     storeOTP(phone, otp)
 
 
-    const accountSid = 'AC025c74a872b51731cc57ed4601448baa';
-    const authToken = 'cbe77ed4980d4f2ce26c61bad5b7c45e';
+    const accountSid = process.env.SID;
+    const authToken = process.env.AUTH_TOKEN;
     const client = twilio(accountSid, authToken);
 
-    client.verify.v2.services("VA69b7ad2edc57815385632eb06717d2ac")
+    client.verify.v2.services(process.env.twillio_key)
         .verifications
         .create({ to: '+919049606217', channel: 'sms' })
         .then((verification: any) => console.log(verification.sid));
