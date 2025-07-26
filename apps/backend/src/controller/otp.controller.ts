@@ -13,9 +13,9 @@ export const sendOTP = async (req: Request, res: Response) => {
     const authToken = process.env.AUTH_TOKEN;
     const client = twilio(accountSid, authToken);
 
-    client.verify.v2.services(process.env.twillio_key)
+    client.verify.v2.services(process.env.TWOLLIO_KEY as string)
         .verifications
-        .create({ to: '+919049606217', channel: 'sms' })
+        .create({ to: phone, channel: 'sms' })
         .then((verification: any) => console.log(verification.sid));
 
     res.status(200).json({ message: "OTP sent successfully" });
