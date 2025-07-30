@@ -1,6 +1,6 @@
 import { RequestHandler, Router } from "express";
 import { createPatient, getPatientById, updatePatient, deletePatient, searchPatientByPhone } from "../controller/patient.controller";
-import { authMiddleware } from "../middleware/authMiddleware";
+import { authMiddleware } from "../middleware/patientAuthMiddleware";
 
 export const router: Router = Router();
 

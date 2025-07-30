@@ -20,18 +20,6 @@ export const getDoctorById = async (req: Request, res: Response) => {
     }
 };
 
-
-export const createDoctor = async (req: Request, res: Response) => {
-    try {
-        const userId = req.userId;
-        const doctor = await prisma.doctor.create({ data: { name: req.body.name, email: req.body.email, password: req.body.password, id: userId } });
-        const token = generateToken({ id: doctor.id, role: "doctor" });
-        res.status(201).json({ doctor, token });
-    } catch (error) {
-        res.status(400).json({ error: (error as Error).message });
-    }
-};
-
 export const getAllDoctors = async (_req: Request, res: Response) => {
     try {
         const doctors = await prisma.doctor.findMany();
@@ -64,3 +52,27 @@ export const deleteDoctor = async (req: Request, res: Response) => {
     }
 };
 
+
+
+export const doctorWebhook = async (req: Request, res: Response) => {
+    try {
+        const body = req.body;
+        if (body.type === "user.created") {
+            const doctor = await prisma.doctor.create({
+                data: {
+                    id: body.data.id,
+                    name: body.data.first_name + " " + body.data.last_name,
+                    primary_email_address_id: body.data.primary_email_address_id,
+                    username: body.data.username || '',
+                }
+            });
+            res.status(200).json(doctor);
+        }
+
+        console.log(body);
+
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({ error: (error as Error).message });
+    }
+}

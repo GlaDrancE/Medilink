@@ -24,7 +24,7 @@ export const addPrescription = async (req: Request, res: Response) => {
                 }
             })
         }
-        const doctor = await prisma.doctor.findUnique({ where: { id: "user_2zXI6zM5GIXhHMe9sTLu6gHBe2r" } });
+        const doctor = await prisma.doctor.findUnique({ where: { id: userId } });
 
 
         if (!doctor) {
