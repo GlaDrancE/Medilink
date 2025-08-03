@@ -98,6 +98,8 @@ export default function PatientAuthPage() {
 
         try {
             const patientData: Patient = {
+                id: "",
+                is_active: true,
                 name: newPatient.name,
                 age: Number(newPatient.age),
                 weight: Number(newPatient.weight),

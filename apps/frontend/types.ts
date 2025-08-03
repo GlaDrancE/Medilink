@@ -44,8 +44,10 @@ export interface Patient {
 export interface Prescriptions {
     id: string
     index?: number
-    patient_id: string
-    doctor_id: string
+    disease?: string
+    nextAppointment?: Date
+    patient_id?: string
+    doctor_id?: string
     prescription_date: string
     prescription_text: string
     is_active: boolean
@@ -54,6 +56,7 @@ export interface Prescriptions {
     medicine_list: MedicineEntry[]
     checkups?: Checkup[]
     doctor: Doctor
+    patient: Patient
 }
 
 export interface MedicineEntry {
@@ -65,6 +68,7 @@ export interface MedicineEntry {
         night: string
     }
     time: string
+    notes?: string
     before_after_food: string
     prescription_id: string
 }

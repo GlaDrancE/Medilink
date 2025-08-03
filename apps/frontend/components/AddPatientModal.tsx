@@ -97,12 +97,12 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
 
     const [medicinesList, setMedicinesList] = useState<MedicineEntry[]>([]);
     const [medicineInput, setMedicineInput] = useState<MedicineEntry>({
+        id: "",
         name: '',
         dosage: { morning: '', afternoon: '', night: '' },
-        food: '',
-        notes: '',
-        time: new Date(),
-        before_after_food: ""
+        time: new Date().toISOString(),
+        before_after_food: "",
+        prescription_id: ""
     });
     const [medicineError, setMedicineError] = useState<string>('');
 
@@ -234,7 +234,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         }
         if (patient) {
             setPatient(patient)
-            setFormData(prev => ({ ...prev, phone: patient.phone, name: patient.name || "", weight: patient.weight.toString(), age: patient.age.toString(), gender: patient.gender }))
+            setFormData(prev => ({ ...prev, phone: patient.phone, name: patient.name || "", weight: patient.weight.toString(), age: patient.age.toString(), gender: patient.gender || "" }))
         }
         if (showAddNewOption) {
             // Patient not found - show form to add new patient
@@ -255,15 +255,17 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             if (patient && patient.id) {
                 onSubmit({
                     id: '',
-                    ...formData, medicine_list: medicinesList, prescription_text: '', patient: {
+                    ...formData, medicine_list: medicinesList, prescription_text: '',
+                    patient: {
+                        id: '',
                         phone: phoneNumber,
                         name: patient.name || '',
                         age: Number(patient.age) || 0,
                         gender: patient.gender || '',
                         weight: Number(patient.weight) || 0,
-                        checkups: [],
+                        is_active: true,
                     },
-                    patient_id: patient.id as string,
+
                     doctor: {
                         id: user?.id || '',
                         name: user?.fullName || '',
@@ -276,18 +278,23 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         patients: [],
                         prescriptions: [],
                     },
+                    patient_id: patient.id as string,
+                    prescription_date: new Date().toISOString(),
+                    is_active: true,
+                    nextAppointment: new Date(),
                 });
             } else {
                 onSubmit({
                     id: '',
                     ...formData,
                     patient: {
+                        id: '',
                         name: formData.name,
                         age: Number(formData.age),
                         gender: formData.gender,
                         weight: Number(formData.weight),
                         phone: phoneNumber,
-                        checkups: [],
+                        is_active: true,
                     },
                     medicine_list: medicinesList,
                     prescription_text: '',
@@ -304,6 +311,9 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         patients: [],
                         prescriptions: [],
                     },
+                    prescription_date: new Date().toISOString(),
+                    is_active: true,
+                    nextAppointment: new Date(),
                 })
             }
             handleClose();
@@ -338,7 +348,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         });
         setErrors({});
         setMedicinesList([]);
-        setMedicineInput({ name: '', dosage: { morning: '', afternoon: '', night: '' }, food: '', notes: '', time: new Date(), before_after_food: "" });
+        setMedicineInput({ id: "", name: '', dosage: { morning: '', afternoon: '', night: '' }, time: new Date().toISOString(), before_after_food: "", prescription_id: "" });
         setMedicineError('');
         setCustomDosage({ morning: '', afternoon: '', night: '' });
         onClose();
@@ -353,12 +363,12 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     };
 
     const handleAddMedicine = () => {
-        if (!medicineInput.name.trim() || (!medicineInput.dosage.morning && !medicineInput.dosage.afternoon && !medicineInput.dosage.night) || !medicineInput.food) {
+        if (!medicineInput.name.trim() || (!medicineInput.dosage.morning && !medicineInput.dosage.afternoon && !medicineInput.dosage.night)) {
             setMedicineError('Please fill all required medicine fields.');
             return;
         }
         setMedicinesList(prev => [...prev, medicineInput]);
-        setMedicineInput({ name: '', dosage: { morning: '', afternoon: '', night: '' }, food: '', notes: '', time: new Date(), before_after_food: "" });
+        setMedicineInput({ id: "", name: '', dosage: { morning: '', afternoon: '', night: '' }, time: new Date().toISOString(), before_after_food: "", prescription_id: "" });
         setCustomDosage({ morning: '', afternoon: '', night: '' });
         setMedicineError('');
     };
@@ -632,7 +642,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
 
                                     <div className="flex gap-2 w-full">
                                         <Select
-                                            value={medicineInput.food}
+                                            value={medicineInput.before_after_food}
                                             onChange={e => setMedicineInput(m => ({ ...m, food: e.target.value }))}
                                             options={foodOptions}
                                             placeholder="Food Timing"
@@ -678,7 +688,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                             ))}
                                                         </TableCell>
                                                         <TableCell className="text-xs">
-                                                            {foodOptions.find(opt => opt.value === med.food)?.label}
+                                                            {foodOptions.find(opt => opt.value === med.before_after_food)?.label}
                                                         </TableCell>
                                                         <TableCell className="text-xs text-gray-900">
                                                             {med.notes}

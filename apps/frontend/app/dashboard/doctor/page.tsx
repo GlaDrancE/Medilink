@@ -37,12 +37,13 @@ export default function DoctorDashboard() {
     const [formData, setFormData] = useState<Prescriptions>({
         id: '',
         patient: {
+            id: '',
             phone: '',
             name: '',
             age: 0,
             gender: '',
             weight: 0,
-            checkups: [],
+            is_active: true,
         },
         doctor: {
             id: '',
@@ -61,15 +62,14 @@ export default function DoctorDashboard() {
             is_approved: false,
             is_rejected: false,
         },
-
         disease: '',
         medicine_list: [],
-        nextAppointment: '',
-        healthCheckupNeeded: false,
-        expectedTime: '',
-        additionalNotes: '',
+        nextAppointment: new Date(),
         prescription_text: '',
+        prescription_date: new Date().toISOString(),
         patient_id: '',
+        checkups: [],
+        is_active: true,
     });
     const [formErrors, setFormErrors] = useState<Partial<PatientData>>({});
     const [formLoading, setFormLoading] = useState(false);
@@ -127,49 +127,6 @@ export default function DoctorDashboard() {
         { value: 'dr-garcia', label: 'Dr. Maria Garcia (Pathologist)' }
     ];
 
-    // Form handlers
-    const validateForm = (): boolean => {
-        const newErrors: Partial<PatientData> = {};
-
-        if (!formData.patient.name.trim()) {
-            newErrors.name = 'Patient name is required';
-        }
-        if (!formData.patient.age) {
-            newErrors.age = 'Patient age is required';
-        } else if (isNaN(Number(formData.patient.age)) || Number(formData.patient.age) <= 0 || Number(formData.patient.age) > 150) {
-            newErrors.age = 'Please enter a valid age (1-150)';
-        }
-        if (!formData.patient.gender) {
-            newErrors.gender = 'Please select gender';
-        }
-        if (!formData.patient.weight) {
-            newErrors.weight = 'Patient weight is required';
-        } else if (isNaN(Number(formData.patient.weight)) || Number(formData.patient.weight) <= 0) {
-            newErrors.weight = 'Please enter a valid weight';
-        }
-        if (!formData.disease.trim()) {
-            newErrors.disease = 'Disease/condition is required';
-        }
-        if (!formData.medicine_list.length) {
-            newErrors.medicines = 'Medicine list is required';
-        }
-
-        if (formData.healthCheckupNeeded) {
-            if (!formData.patient.checkups?.[0]?.suggestedHospital) {
-                newErrors.suggestedHospital = 'Please select a hospital for checkup';
-            }
-            if (!formData.patient.checkups?.[0]?.suggestedDoctor) {
-                newErrors.suggestedDoctor = 'Please select a doctor for checkup';
-            }
-            if (!formData.expectedTime.trim()) {
-                newErrors.expectedTime = 'Expected time is required for checkup';
-            }
-        }
-
-        setFormErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
     const handleAddPatient = async (patientData: Prescriptions) => {
         // e.preventDefault();
 
@@ -190,20 +147,22 @@ export default function DoctorDashboard() {
         setFormData({
             id: '',
             patient: {
+                id: '',
                 phone: '',
                 name: '',
                 age: 0,
                 gender: '',
                 weight: 0,
+                is_active: true,
             },
             disease: '',
             medicine_list: [],
-            nextAppointment: '',
-            healthCheckupNeeded: false,
-            expectedTime: '',
-            additionalNotes: '',
+            nextAppointment: new Date(),
             prescription_text: '',
+            prescription_date: new Date().toISOString(),
             patient_id: '',
+            doctor_id: '',
+            is_active: true,
             doctor: {
                 id: '',
                 name: '',
@@ -221,6 +180,7 @@ export default function DoctorDashboard() {
                 is_approved: false,
                 is_rejected: false,
             },
+            checkups: [],
         });
         setFormErrors({});
         setIsAddPatientModalOpen(false);
