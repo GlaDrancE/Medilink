@@ -3,6 +3,33 @@ import prisma from "@repo/db";
 import { randomUUIDv7 } from "bun";
 
 
+export const getPrescription = async (req: Request, res: Response) => {
+    const userId = req.userId;
+    console.log(userId)
+    const prescriptions = await prisma.patient.findFirst({
+        where: { id: userId },
+        include: {
+            prescriptions: {
+                include: {
+                    medicine_list: true,
+                    checkups: true,
+                    doctor: {
+                        select: {
+                            name: true,
+                            specialization: true,
+                            hospital: true,
+                            experience: true
+                        }
+                    }
+                },
+                orderBy: {
+                    index: 'asc'
+                }
+            }
+        }
+    });
+    res.status(200).json(prescriptions);
+}
 
 export const addPrescription = async (req: Request, res: Response) => {
     try {
@@ -28,7 +55,7 @@ export const addPrescription = async (req: Request, res: Response) => {
 
 
         if (!doctor) {
-            return res.status(404).json({ error: "Patient or doctor not found" });
+            return res.status(404).json({ error: "Doctor not found" });
         }
 
         const prescription = await prisma.$transaction(async (tx) => {

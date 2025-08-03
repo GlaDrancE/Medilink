@@ -15,26 +15,33 @@ datasource db {
 }
 
 model Doctor {
-  id                       String          @id @default(uuid())
-  primary_email_address_id String          @unique
-  name                     String
-  username                 String?         @unique
-  email                    String?         @unique
-  password                 String?
-  address                  String?
-  license_number           String?
-  specialization           String?
-  experience               Int?
-  bio                      String?
-  profile_picture          String?
-  is_active                Boolean         @default(true)
-  is_verified              Boolean         @default(false)
-  is_approved              Boolean         @default(false)
-  is_rejected              Boolean         @default(false)
-  createdAt                DateTime        @default(now())
-  updatedAt                DateTime        @updatedAt
-  Patients                 Patient[]
-  Prescriptions            Prescriptions[]
+  id                          String          @id @default(uuid())
+  primary_email_address_id    String          @unique
+  medical_registration_number String?
+  name                        String
+  username                    String?         @unique
+  email                       String?         @unique
+  password                    String?
+  phone                       String?
+  address                     String?
+  consultation_fees           Int?
+  consultation_type           String?
+  qualifications              String?
+  years_of_experience         Int?
+  hospital                    String          @default("Not Specified")
+  license_number              String?
+  specialization              String?
+  experience                  Int?
+  bio                         String?
+  profile_picture             String?
+  is_active                   Boolean         @default(true)
+  is_verified                 Boolean         @default(false)
+  is_approved                 Boolean         @default(false)
+  is_rejected                 Boolean         @default(false)
+  createdAt                   DateTime        @default(now())
+  updatedAt                   DateTime        @updatedAt
+  Patients                    Patient[]
+  Prescriptions               Prescriptions[]
 }
 
 model Patient {
@@ -57,7 +64,7 @@ model Patient {
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  Prescriptions Prescriptions[]
+  prescriptions Prescriptions[]
 }
 
 model Prescriptions {
@@ -73,6 +80,7 @@ model Prescriptions {
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   medicine_list     Medicine[]
+  checkups          Checkup[]
 }
 
 enum FoodTiming {
@@ -88,4 +96,13 @@ model Medicine {
   before_after_food FoodTiming
   prescription_id   String
   prescription      Prescriptions @relation(fields: [prescription_id], references: [id])
+}
+
+model Checkup {
+  id              String        @id @default(uuid())
+  prescription_id String
+  checkup_date    DateTime      @default(now())
+  checkup_text    String
+  is_active       Boolean       @default(true)
+  prescription    Prescriptions @relation(fields: [prescription_id], references: [id])
 }

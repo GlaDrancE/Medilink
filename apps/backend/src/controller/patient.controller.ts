@@ -24,7 +24,28 @@ export const getPatientById = async (req: Request, res: Response) => {
     const id = req.userId;
 
     try {
-        const patient = await prisma.patient.findFirst({ where: { id } });
+        const patient = await prisma.patient.findFirst({
+            where: { id },
+            include: {
+                prescriptions: {
+                    include: {
+                        medicine_list: true,
+                        checkups: true,
+                        doctor: {
+                            select: {
+                                name: true,
+                                specialization: true,
+                                hospital: true,
+                                experience: true
+                            }
+                        }
+                    },
+                    orderBy: {
+                        index: 'asc'
+                    }
+                },
+            }
+        });
         if (!patient) res.status(404).json({ message: "Patient not found" });
         res.status(200).json(patient);
     } catch (error) {

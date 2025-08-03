@@ -6,7 +6,7 @@ const router: Router = Router();
 
 router.get("/doctor", authMiddleware as RequestHandler, getDoctorById)
 router.get("/doctor", authMiddleware as RequestHandler, getAllDoctors)
-router.put("/doctor", authMiddleware as RequestHandler, updateDoctor)
+router.put("/doctor/:id", authMiddleware as RequestHandler, updateDoctor)
 router.delete("/doctor", authMiddleware as RequestHandler, deleteDoctor)
 
 router.post("/webhook/clerk", doctorWebhook)
