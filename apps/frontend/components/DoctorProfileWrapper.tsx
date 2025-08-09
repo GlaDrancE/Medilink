@@ -6,9 +6,6 @@ import { useEffect } from "react";
 
 export default function DoctorProfileWrapper() {
     const { isModalOpen, closeModal } = useDoctorProfileModal();
-    useEffect(() => {
-        console.log(isModalOpen)
-    }, [isModalOpen])
 
     const handleSuccess = () => {
         // You can add any success handling here

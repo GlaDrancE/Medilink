@@ -20,6 +20,7 @@ export const getDoctorById = async (req: Request, res: Response) => {
     }
 };
 
+
 export const getAllDoctors = async (_req: Request, res: Response) => {
     try {
         const doctors = await prisma.doctor.findMany();

@@ -31,14 +31,26 @@ export interface Patient {
     gender?: string | null
     age: number
     weight: number
+    height: number
     date_of_birth?: string | null
     blood_group?: string | null
     allergies?: string[]
-    medical_history?: string[]
+
+    document_id?: string | null
+    documents?: Document[]
     is_active: boolean
     createdAt?: string
     updatedAt?: string
     prescriptions?: Prescriptions[]
+}
+
+export interface Document {
+    id: string
+    file_url: string
+    type: string
+    name?: string
+    createdAt: string
+    updatedAt: string
 }
 
 export interface Prescriptions {

@@ -1,3 +1,3 @@
 import { config } from "./config";
-
-export { config };
+import { sendEmail } from "./utils/sendEmail";
+export { config, sendEmail };

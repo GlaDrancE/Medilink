@@ -12,7 +12,7 @@ import { MedicineEntry, Patient, Prescriptions } from '@/types';
 import { createPatient, searchPatientByPhone } from '@/services/api.routes';
 import { validatePhoneNumber, formatPhoneNumber } from '@/lib/validation';
 import { useUser } from '@clerk/nextjs';
-import { X } from 'lucide-react';
+import { X, Pill, FlaskRound, Stethoscope, Calendar as CalendarIcon, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -21,6 +21,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { useDoctor } from '@/hooks/useDoctor';
+import Image from 'next/image';
 
 interface AddPatientModalProps {
     isOpen: boolean;
@@ -37,6 +39,7 @@ interface PatientData {
     age: string;
     gender: string;
     weight: string;
+    height: string;
 
     // Medical Information
     disease: string;
@@ -71,6 +74,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     const [doctorOptions, setDoctorOptions] = useState<any[]>([]);
     const [patient, setPatient] = useState<Patient | null>(null)
     const { user } = useUser();
+    const { doctor } = useDoctor();
 
     // Debounce for phone search
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -82,6 +86,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         age: '',
         gender: '',
         weight: '',
+        height: '',
         disease: '',
         medicines: '',
         nextAppointment: '',
@@ -128,6 +133,76 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
 
     const timeKeys = ['morning', 'afternoon', 'night'] as const;
     type TimeKey = typeof timeKeys[number];
+    // Tabs within form step
+    const [activeTab, setActiveTab] = useState<'details' | 'history'>('details');
+
+    // Patient history state (placeholder shape; to be wired with API later)
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [patientHistory, setPatientHistory] = useState<{
+        labTests: Array<{ id: string; name: string; date: string; summary?: string; pdfUrl?: string }>,
+        prescriptions: Prescriptions[],
+        diagnoses: Array<{ id: string; name: string; severity?: 'low' | 'medium' | 'high' }>,
+        visits: Array<{ id: string; date: string; location?: string; note?: string }>
+    }>({ labTests: [], prescriptions: [], diagnoses: [], visits: [] });
+    const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
+        labs: true,
+        prescriptions: true,
+        diagnoses: true,
+        visits: true,
+    });
+    const [showAllLabs, setShowAllLabs] = useState(false);
+    const [expandedLabTests, setExpandedLabTests] = useState<Record<string, boolean>>({});
+    const [showAllPrescriptionDocs, setShowAllPrescriptionDocs] = useState(false);
+    const [expandedPrescriptionDocs, setExpandedPrescriptionDocs] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        // Fetch history lazily when switching to history tab and a patient is known
+        const fetchHistory = async () => {
+            if (!patient?.id) return;
+            setHistoryLoading(true);
+            try {
+                // TODO: Replace with real API call (doctor-facing) to fetch patient history by id
+                // For now, keep placeholders so UI is scannable even without data
+                setPatientHistory(prev => ({
+                    ...prev,
+                    prescriptions: [],
+                    labTests: [],
+                    diagnoses: [],
+                    visits: [],
+                }));
+            } catch (e) {
+                // noop
+            } finally {
+                setHistoryLoading(false);
+            }
+        };
+
+        if (activeTab === 'history') {
+            fetchHistory();
+        }
+    }, [activeTab, patient?.id]);
+
+    const toggleSection = (key: 'labs' | 'prescriptions' | 'diagnoses' | 'visits') => {
+        setExpandedSections(s => ({ ...s, [key]: !s[key] }));
+    };
+
+    const toggleLabTest = (id: string) => {
+        setExpandedLabTests(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const togglePrescriptionDoc = (id: string) => {
+        setExpandedPrescriptionDocs(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const isPdfUrl = (url: string | undefined) => {
+        if (!url) return false;
+        return /\.pdf(\?|$)/i.test(url);
+    };
+
+    const isImageUrl = (url: string | undefined) => {
+        if (!url) return false;
+        return /\.(png|jpe?g|gif|bmp|webp|svg)(\?|$)/i.test(url);
+    };
 
     // Phone number search with debounce
     useEffect(() => {
@@ -263,6 +338,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         age: Number(patient.age) || 0,
                         gender: patient.gender || '',
                         weight: Number(patient.weight) || 0,
+                        height: Number(patient.height) || 0,
                         is_active: true,
                     },
 
@@ -293,6 +369,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         age: Number(formData.age),
                         gender: formData.gender,
                         weight: Number(formData.weight),
+                        height: Number(formData.height),
                         phone: phoneNumber,
                         is_active: true,
                     },
@@ -317,6 +394,91 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                 })
             }
             handleClose();
+            const emailContent =
+                `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>Prescription Added</title>
+                <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f6f8fb;
+                    margin: 0;
+                    padding: 0;
+                }
+                .email-container {
+                    max-width: 600px;
+                    margin: 20px auto;
+                    background-color: #ffffff;
+                    border-radius: 8px;
+                    padding: 30px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    padding-bottom: 20px;
+                }
+                .header h2 {
+                    margin: 0;
+                    color: #333333;
+                }
+                .content {
+                    font-size: 16px;
+                    color: #444444;
+                    line-height: 1.6;
+                }
+                .cta-button {
+                    display: inline-block;
+                    margin-top: 25px;
+                    padding: 12px 24px;
+                    background-color: #007bff;
+                    color: #ffffff;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                }
+                .footer {
+                    margin-top: 30px;
+                    font-size: 14px;
+                    color: #888888;
+                    text-align: center;
+                }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                <div class="header">
+                    <h2>Your Prescription is Ready</h2>
+                </div>
+                <div class="content">
+                    <p>Dear <strong>${formData.name}</strong>,</p>
+                    <p>
+                    Thank you for visiting <strong>${doctor?.hospital}</strong>. We’d like to inform you
+                    that your doctor, <strong>Dr. ${doctor?.name}</strong>, has added your
+                    prescription to your patient portal.
+                    </p>
+                    <p>
+                    You can now access, download, or share your prescription at any time.
+                    </p>
+                    <p style="text-align: center;">
+                    <a href="{{PortalLink}}" class="cta-button">View Prescription</a>
+                    </p>
+                    <p>
+                    If you need any assistance, feel free to contact us at
+                    <a href="mailto:ayushr16060@gmail.com">Developer's email</a>.
+                    </p>
+                </div>
+                <div class="footer">
+                    Wishing you a speedy recovery,<br />
+                    <strong>Team ${doctor?.hospital}</strong>
+                </div>
+                </div>
+            </body>
+            </html>
+            `
         } catch (error) {
             console.error('Error adding patient:', error);
         } finally {
@@ -337,6 +499,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             age: '',
             gender: '',
             weight: '',
+            height: '',
             disease: '',
             medicines: '',
             nextAppointment: '',
@@ -387,7 +550,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             isOpen={isOpen}
             onClose={handleClose}
             title={currentStep === 'phone' ? "Search Patient" : "Add New Patient"}
-            size="xl"
+            size='screen'
         >
             {currentStep === 'phone' ? (
                 <div className="p-6 space-y-6">
@@ -488,349 +651,592 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                     </div>
                 </div>
             ) : (
-                <form onSubmit={handleSubmit} className="p-6 space-y-8">
-                    {/* Back to Phone Search Button */}
-                    <div className="flex items-center justify-between">
-                        <Button
+                <div className="space-y-4">
+                    {/* Tabs */}
+                    <div className="flex sticky top-0 bg-accent z-50 items-center gap-2 border-b border-gray-200">
+                        <button
                             type="button"
-                            variant="outline"
-                            onClick={handleBackToPhone}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${activeTab === 'details' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-800'}`}
+                            onClick={() => setActiveTab('details')}
                             disabled={loading}
-                            className="flex items-center"
                         >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                            </svg>
-                            Back to Search
-                        </Button>
-                        <div className="text-sm text-gray-500">
-                            Adding new patient for: {formatPhoneNumber(phoneNumber)}
-                        </div>
+                            Add Details
+                        </button>
+                        <button
+                            type="button"
+                            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${activeTab === 'history' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-800'}`}
+                            onClick={() => setActiveTab('history')}
+                            disabled={loading}
+                        >
+                            History
+                        </button>
                     </div>
-
-                    {/* Basic Information Section */}
-                    <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                            Basic Information
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input
-                                label="Patient Name *"
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => updateFormData('name', e.target.value)}
-                                placeholder="Enter patient's full name"
-                                error={errors.name}
-                                disabled={loading}
-                            />
-                            <Input
-                                label="Age *"
-                                type="number"
-                                value={formData.age}
-                                onChange={(e) => updateFormData('age', e.target.value)}
-                                placeholder="Enter age"
-                                error={errors.age}
-                                disabled={loading}
-                                min="1"
-                                max="150"
-                            />
-                            <Select
-                                label="Gender *"
-                                value={formData.gender}
-                                onChange={(e) => updateFormData('gender', e.target.value)}
-                                options={genderOptions}
-                                placeholder="Select gender"
-                                error={errors.gender}
-                                disabled={loading}
-                            />
-                            <Input
-                                label="Weight (kg) *"
-                                type="number"
-                                value={formData.weight}
-                                onChange={(e) => updateFormData('weight', e.target.value)}
-                                placeholder="Enter weight in kg"
-                                error={errors.weight}
-                                disabled={loading}
-                                min="0.1"
-                                step="0.1"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Medical Information Section */}
-                    <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            Medical Information
-                        </h4>
-                        <div className="space-y-4">
-                            <Textarea
-                                label="Disease/Medical Condition *"
-                                value={formData.disease}
-                                onChange={(e) => updateFormData('disease', e.target.value)}
-                                placeholder="Describe the patient's current medical condition or diagnosis"
-                                error={errors.disease}
-                                disabled={loading}
-                                rows={3}
-                            />
-                            {/* Medicines List Input */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Prescribed Medicines *</label>
-                                <div className="w-full">
-                                    <div className="flex gap-2 w-full ">
-                                        <AutocompleteInput
-                                            value={medicineInput.name}
-                                            onChange={val => setMedicineInput(m => ({ ...m, name: val }))}
-                                            onSelect={val => setMedicineInput(m => ({ ...m, name: val }))}
-                                            placeholder="Medicine Name"
-                                            disabled={loading}
-                                            className='w-full'
-                                        />
-
-                                        {/* Compact Dosage Selector */}
-                                        <div className="flex gap-1">
-                                            {timeKeys.map((time) => (
-                                                <div key={time} className="flex flex-col items-center">
-                                                    <span className="text-xs text-gray-600 capitalize mb-1">{time[0]}</span>
-                                                    <select
-                                                        value={medicineInput.dosage[time]}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setMedicineInput(m => ({
-                                                                ...m,
-                                                                dosage: { ...m.dosage, [time]: val }
-                                                            }));
-                                                        }}
-                                                        className="w-12 px-1 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                        disabled={loading}
-                                                    >
-                                                        <option value="">-</option>
-                                                        <option value="0.5">½</option>
-                                                        <option value="1">1</option>
-                                                        <option value="2">2</option>
-                                                        <option value="custom">C</option>
-                                                    </select>
-
-                                                    {/* Custom input for custom dosage */}
-                                                    {medicineInput.dosage[time] === 'custom' && (
-                                                        <input
-                                                            type="text"
-                                                            placeholder="?"
-                                                            className="w-12 px-1 py-1 text-xs border rounded mt-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                            onChange={(e) => {
-                                                                setMedicineInput(m => ({
-                                                                    ...m,
-                                                                    dosage: { ...m.dosage, [time]: e.target.value }
-                                                                }));
-                                                            }}
-                                                            disabled={loading}
-                                                        />
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
+                    <div className='p-6'>
+                        {activeTab === 'details' ? (
+                            <form onSubmit={handleSubmit} className="space-y-8">
+                                {/* Back to Phone Search Button */}
+                                <div className="flex items-center justify-between">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleBackToPhone}
+                                        disabled={loading}
+                                        className="flex items-center"
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                        Back to Search
+                                    </Button>
+                                    <div className="text-sm text-gray-500">
+                                        Adding new patient for: {formatPhoneNumber(phoneNumber)}
                                     </div>
+                                </div>
 
-                                    <div className="flex gap-2 w-full">
-                                        <Select
-                                            value={medicineInput.before_after_food}
-                                            onChange={e => setMedicineInput(m => ({ ...m, food: e.target.value }))}
-                                            options={foodOptions}
-                                            placeholder="Food Timing"
+                                {/* Basic Information Section */}
+                                <div>
+                                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                        Basic Information
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Input
+                                            label="Patient Name *"
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={(e) => updateFormData('name', e.target.value)}
+                                            placeholder="Enter patient's full name"
+                                            error={errors.name}
                                             disabled={loading}
                                         />
                                         <Input
-                                            placeholder="Other notes"
-                                            value={medicineInput.notes}
-                                            onChange={e => setMedicineInput(m => ({ ...m, notes: e.target.value }))}
+                                            label="Age *"
+                                            type="number"
+                                            value={formData.age}
+                                            onChange={(e) => updateFormData('age', e.target.value)}
+                                            placeholder="Enter age"
+                                            error={errors.age}
+                                            disabled={loading}
+                                            min="1"
+                                            max="150"
+                                        />
+                                        <Select
+                                            label="Gender *"
+                                            value={formData.gender}
+                                            onChange={(e) => updateFormData('gender', e.target.value)}
+                                            options={genderOptions}
+                                            placeholder="Select gender"
+                                            error={errors.gender}
                                             disabled={loading}
                                         />
-                                        <Button type="button" onClick={handleAddMedicine} disabled={loading}>Add</Button>
+                                        <Input
+                                            label="Weight (kg) *"
+                                            type="number"
+                                            value={formData.weight}
+                                            onChange={(e) => updateFormData('weight', e.target.value)}
+                                            placeholder="Enter weight in kg"
+                                            error={errors.weight}
+                                            disabled={loading}
+                                            min="0.1"
+                                            step="0.1"
+                                        />
                                     </div>
                                 </div>
-                                {medicineError && <p className="text-xs text-red-600 mt-1">{medicineError}</p>}
-                                {errors.medicines && <p className="text-xs text-red-600 mt-1">{errors.medicines}</p>}
-                                {/* Medicines List Table */}
-                                {medicinesList.length > 0 && (
-                                    <div className="mt-2 max-h-32 overflow-y-auto border rounded-md">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="text-xs font-semibold">Name</TableHead>
-                                                    <TableHead className="text-xs font-semibold">Dosage</TableHead>
-                                                    <TableHead className="text-xs font-semibold">Food</TableHead>
-                                                    <TableHead className="text-xs font-semibold">Notes</TableHead>
-                                                    <TableHead className="text-xs font-semibold w-8">Close</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {medicinesList.map((med, idx) => (
-                                                    <TableRow key={idx}>
-                                                        <TableCell className="text-xs font-bold text-gray-900">
-                                                            {med.name}
-                                                        </TableCell>
-                                                        <TableCell className="text-xs flex gap-2">
-                                                            {timeKeys.map((t) => (
-                                                                med.dosage[t] ? (
-                                                                    <div key={t} className="text-xs">
-                                                                        {med.dosage[t]}
-                                                                    </div>
-                                                                ) : null
+
+                                {/* Medical Information Section */}
+                                <div>
+                                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        Medical Information
+                                    </h4>
+                                    <div className="space-y-4">
+                                        <Textarea
+                                            label="Disease/Medical Condition *"
+                                            value={formData.disease}
+                                            onChange={(e) => updateFormData('disease', e.target.value)}
+                                            placeholder="Describe the patient's current medical condition or diagnosis"
+                                            error={errors.disease}
+                                            disabled={loading}
+                                            rows={3}
+                                        />
+                                        {/* Medicines List Input */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Prescribed Medicines *</label>
+                                            <div className="w-full">
+                                                <div className="flex gap-2 w-full ">
+                                                    <AutocompleteInput
+                                                        value={medicineInput.name}
+                                                        onChange={val => setMedicineInput(m => ({ ...m, name: val }))}
+                                                        onSelect={val => setMedicineInput(m => ({ ...m, name: val }))}
+                                                        placeholder="Medicine Name"
+                                                        disabled={loading}
+                                                        className='w-full'
+                                                    />
+
+                                                    {/* Compact Dosage Selector */}
+                                                    <div className="flex gap-1">
+                                                        {timeKeys.map((time) => (
+                                                            <div key={time} className="flex flex-col items-center">
+                                                                <span className="text-xs text-gray-600 capitalize mb-1">{time[0]}</span>
+                                                                <select
+                                                                    value={medicineInput.dosage[time]}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setMedicineInput(m => ({
+                                                                            ...m,
+                                                                            dosage: { ...m.dosage, [time]: val }
+                                                                        }));
+                                                                    }}
+                                                                    className="w-12 px-1 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                                    disabled={loading}
+                                                                >
+                                                                    <option value="">-</option>
+                                                                    <option value="0.5">½</option>
+                                                                    <option value="1">1</option>
+                                                                    <option value="2">2</option>
+                                                                    <option value="custom">C</option>
+                                                                </select>
+
+                                                                {/* Custom input for custom dosage */}
+                                                                {medicineInput.dosage[time] === 'custom' && (
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="?"
+                                                                        className="w-12 px-1 py-1 text-xs border rounded mt-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                                        onChange={(e) => {
+                                                                            setMedicineInput(m => ({
+                                                                                ...m,
+                                                                                dosage: { ...m.dosage, [time]: e.target.value }
+                                                                            }));
+                                                                        }}
+                                                                        disabled={loading}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-2 w-full mt-2">
+                                                    <div className="flex items-center gap-2">
+                                                        {foodOptions.map(opt => (
+                                                            <label key={opt.value} className="flex items-center text-xs gap-1">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="before_after_food"
+                                                                    value={opt.value}
+                                                                    checked={medicineInput.before_after_food === opt.value}
+                                                                    onChange={e => setMedicineInput(m => ({ ...m, before_after_food: e.target.value }))}
+                                                                    disabled={loading}
+                                                                />
+                                                                {opt.label}
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                    <Input
+                                                        placeholder="Other notes"
+                                                        value={medicineInput.notes}
+                                                        onChange={e => setMedicineInput(m => ({ ...m, notes: e.target.value }))}
+                                                        disabled={loading}
+                                                        className='!p-1'
+                                                    />
+                                                    <Button type="button" onClick={handleAddMedicine} disabled={loading}>Add</Button>
+                                                </div>
+                                            </div>
+                                            {medicineError && <p className="text-xs text-red-600 mt-1">{medicineError}</p>}
+                                            {errors.medicines && <p className="text-xs text-red-600 mt-1">{errors.medicines}</p>}
+                                            {/* Medicines List Table */}
+                                            {medicinesList.length > 0 && (
+                                                <div className="mt-2 max-h-32 overflow-y-auto border rounded-md">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead className="text-xs font-semibold">Name</TableHead>
+                                                                <TableHead className="text-xs font-semibold">Dosage</TableHead>
+                                                                <TableHead className="text-xs font-semibold">Food</TableHead>
+                                                                <TableHead className="text-xs font-semibold">Notes</TableHead>
+                                                                <TableHead className="text-xs font-semibold w-8">Close</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {medicinesList.map((med, idx) => (
+                                                                <TableRow key={idx}>
+                                                                    <TableCell className="text-xs font-bold text-gray-900">
+                                                                        {med.name}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-xs flex gap-2">
+                                                                        {timeKeys.map((t) => (
+                                                                            med.dosage[t] ? (
+                                                                                <div key={t} className="text-xs">
+                                                                                    {med.dosage[t]}
+                                                                                </div>
+                                                                            ) : <span className='text-xs'>-</span>
+                                                                        ))}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-xs">
+                                                                        {foodOptions.find(opt => opt.value === med.before_after_food)?.label}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-xs text-gray-900">
+                                                                        {med.notes}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-xs">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleRemoveMedicine(idx)}
+                                                                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                                                                        >
+                                                                            <X size={14} />
+                                                                        </button>
+                                                                    </TableCell>
+                                                                </TableRow>
                                                             ))}
-                                                        </TableCell>
-                                                        <TableCell className="text-xs">
-                                                            {foodOptions.find(opt => opt.value === med.before_after_food)?.label}
-                                                        </TableCell>
-                                                        <TableCell className="text-xs text-gray-900">
-                                                            {med.notes}
-                                                        </TableCell>
-                                                        <TableCell className="text-xs">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRemoveMedicine(idx)}
-                                                                className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
-                                                            >
-                                                                <X size={14} />
-                                                            </button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                                </div>
 
-                    {/* Appointment Section */}
-                    <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                                <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            Follow-up Appointment
-                        </h4>
-                        <Calendar
-                            label="Next Appointment Date"
-                            value={formData.nextAppointment}
-                            onChange={val => updateFormData('nextAppointment', val)}
-                            error={errors.nextAppointment}
-                            disabled={false}
-                        />
-                    </div>
-
-                    {/* Health Checkup Section */}
-                    <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                                <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5h2a2 2 0 012 2v6a2 2 0 01-2 2h-2a2 2 0 01-2-2V7a2 2 0 012-2z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4" />
-                                </svg>
-                            </div>
-                            Health Checkup Requirements
-                        </h4>
-
-                        <div className="space-y-4">
-                            <label className="flex items-center space-x-3">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.healthCheckupNeeded}
-                                    onChange={(e) => updateFormData('healthCheckupNeeded', e.target.checked)}
-                                    disabled={loading}
-                                    className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                                />
-                                <span className="text-sm font-medium text-gray-700">
-                                    Health-related checkup needed
-                                </span>
-                            </label>
-
-                            {formData.healthCheckupNeeded && (
-                                <div className="pl-7 space-y-4 border-l-2 border-green-200">
-                                    <Select
-                                        label="Suggested Hospital *"
-                                        value={formData.suggestedHospital}
-                                        onChange={(e) => updateFormData('suggestedHospital', e.target.value)}
-                                        options={hospitalOptions}
-                                        placeholder="Select recommended hospital"
-                                        error={errors.suggestedHospital}
-                                        disabled={loading}
-                                    />
-                                    <Select
-                                        label="Suggested Doctor *"
-                                        value={formData.suggestedDoctor}
-                                        onChange={(e) => updateFormData('suggestedDoctor', e.target.value)}
-                                        options={doctorOptions}
-                                        placeholder="Select recommended specialist"
-                                        error={errors.suggestedDoctor}
-                                        disabled={loading}
-                                    />
-                                    <Input
-                                        label="Expected Time for Checkup *"
-                                        type="text"
-                                        value={formData.expectedTime}
-                                        onChange={(e) => updateFormData('expectedTime', e.target.value)}
-                                        placeholder="e.g., Within 1 week, 2-3 days, ASAP"
-                                        error={errors.expectedTime}
-                                        disabled={loading}
+                                {/* Appointment Section */}
+                                <div>
+                                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                            <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        Follow-up Appointment
+                                    </h4>
+                                    <Calendar
+                                        label="Next Appointment Date"
+                                        value={formData.nextAppointment}
+                                        onChange={val => updateFormData('nextAppointment', val)}
+                                        error={errors.nextAppointment}
+                                        disabled={false}
                                     />
                                 </div>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Additional Notes Section */}
-                    <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
+                                {/* Health Checkup Section */}
+                                <div>
+                                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                            <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5h2a2 2 0 012 2v6a2 2 0 01-2 2h-2a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4" />
+                                            </svg>
+                                        </div>
+                                        Health Checkup Requirements
+                                    </h4>
+
+                                    <div className="space-y-4">
+                                        <label className="flex items-center space-x-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.healthCheckupNeeded}
+                                                onChange={(e) => updateFormData('healthCheckupNeeded', e.target.checked)}
+                                                disabled={loading}
+                                                className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700">
+                                                Health-related checkup needed
+                                            </span>
+                                        </label>
+
+                                        {formData.healthCheckupNeeded && (
+                                            <div className="pl-7 space-y-4 border-l-2 border-green-200">
+                                                <Select
+                                                    label="Suggested Hospital *"
+                                                    value={formData.suggestedHospital}
+                                                    onChange={(e) => updateFormData('suggestedHospital', e.target.value)}
+                                                    options={hospitalOptions}
+                                                    placeholder="Select recommended hospital"
+                                                    error={errors.suggestedHospital}
+                                                    disabled={loading}
+                                                />
+                                                <Select
+                                                    label="Suggested Doctor *"
+                                                    value={formData.suggestedDoctor}
+                                                    onChange={(e) => updateFormData('suggestedDoctor', e.target.value)}
+                                                    options={doctorOptions}
+                                                    placeholder="Select recommended specialist"
+                                                    error={errors.suggestedDoctor}
+                                                    disabled={loading}
+                                                />
+                                                <Input
+                                                    label="Expected Time for Checkup *"
+                                                    type="text"
+                                                    value={formData.expectedTime}
+                                                    onChange={(e) => updateFormData('expectedTime', e.target.value)}
+                                                    placeholder="e.g., Within 1 week, 2-3 days, ASAP"
+                                                    error={errors.expectedTime}
+                                                    disabled={loading}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Additional Notes Section */}
+                                <div>
+                                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </div>
+                                        Additional Notes
+                                    </h4>
+                                    <Textarea
+                                        label="Additional Information"
+                                        value={formData.additionalNotes}
+                                        onChange={(e) => updateFormData('additionalNotes', e.target.value)}
+                                        placeholder="Any additional notes, observations, or special instructions"
+                                        disabled={loading}
+                                        rows={3}
+                                    />
+                                </div>
+
+                                {/* Form Actions */}
+                                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleClose}
+                                        disabled={loading}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        className="bg-green-600 hover:bg-green-700 focus:ring-green-500"
+                                        loading={loading}
+                                    >
+                                        Add Patient
+                                    </Button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="space-y-6">
+                                {/* Summary */}
+                                {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    <div className="p-3 rounded-md border bg-white flex items-center gap-2">
+                                        <FlaskRound className="w-4 h-4 text-purple-600" />
+                                        <span className="text-sm text-gray-700">Lab Tests</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.labTests.length}</span>
+                                    </div>
+                                    <div className="p-3 rounded-md border bg-white flex items-center gap-2">
+                                        <Pill className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm text-gray-700">Prescriptions</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.prescriptions.length}</span>
+                                    </div>
+                                    <div className="p-3 rounded-md border bg-white flex items-center gap-2">
+                                        <Stethoscope className="w-4 h-4 text-rose-600" />
+                                        <span className="text-sm text-gray-700">Diagnoses</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.diagnoses.length}</span>
+                                    </div>
+                                    <div className="p-3 rounded-md border bg-white flex items-center gap-2">
+                                        <CalendarIcon className="w-4 h-4 text-emerald-600" />
+                                        <span className="text-sm text-gray-700">Visits</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.visits.length}</span>
+                                    </div>
+                                </div> */}
+
+                                {historyLoading && (
+                                    <div className="flex items-center justify-center py-6 text-sm text-gray-600">Loading history…</div>
+                                )}
+
+                                {/* 🧪 Lab Tests */}
+                                <div className="border rounded-md">
+                                    <button type="button" className="w-full px-4 py-2 flex items-center gap-2" onClick={() => toggleSection('labs')}>
+                                        <FlaskRound className="w-4 h-4 text-purple-600" />
+                                        <span className="text-sm font-medium">Lab Tests</span>
+                                        <span className="ml-2 text-xs text-gray-500">(latest 3)</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.labTests.length}</span>
+                                        {expandedSections.labs ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                    </button>
+                                    {expandedSections.labs && (
+                                        <div className="px-4 pb-3 space-y-2">
+                                            {(!patient || !patient.documents || (patient.documents.filter(d => d.type === 'lab')).length === 0) && (
+                                                <div className="text-sm text-gray-500">No prescriptions.</div>
+                                            )}
+                                            {patient?.documents?.length && (patient.documents.filter(doc => doc.type === 'lab').slice(0, 3)).map((test, index) => {
+                                                return (
+                                                    <div key={test.id} className="border rounded-md">
+                                                        <button
+                                                            type="button"
+                                                            className="w-full px-3 py-2 flex items-center justify-between"
+                                                            onClick={() => toggleLabTest(String(test.id))}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`text-sm text-[#${Math.floor(Math.random() * 16777215).toString(16)}] font-bold`}>{index + 1}.</span>
+                                                                <span className="text-sm text-gray-800">{test.name || patient.name}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-xs text-gray-500">{test?.createdAt ? new Date(test.createdAt).toLocaleDateString() : ''}</span>
+                                                                {expandedLabTests[String(test.id)] ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                                            </div>
+                                                        </button>
+                                                        {expandedLabTests[String(test.id)] && (
+                                                            <div className="px-3 pb-3">
+                                                                {isImageUrl(test.file_url) && (
+                                                                    <img src={test.file_url} alt={test.name} className="w-full max-h-80 object-contain rounded" />
+                                                                )}
+                                                                {isPdfUrl(test.file_url) && (
+                                                                    <div className="w-full h-80">
+                                                                        <iframe src={test.file_url || ''} className="w-full h-full rounded" title={test.name}></iframe>
+                                                                    </div>
+                                                                )}
+                                                                {!isImageUrl(test.file_url) && !isPdfUrl(test.file_url) && (
+                                                                    <div className="text-xs text-gray-500">No preview available.</div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                            {patient?.documents?.length && (patient?.documents.filter(doc => doc.type === 'lab')).length > 3 && (
+                                                <div className="pt-1">
+                                                    <Button type="button" size="sm" variant="outline" onClick={() => setShowAllLabs(s => !s)}>
+                                                        {showAllLabs ? 'Show Less' : 'View All'}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 💊 Previous Prescriptions */}
+                                <div className="border rounded-md">
+                                    <button type="button" className="w-full px-4 py-2 flex items-center gap-2" onClick={() => toggleSection('prescriptions')}>
+                                        <Pill className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm font-medium">Previous Prescriptions</span>
+                                        <span className="ml-2 text-xs text-gray-500">(latest 3)</span>
+                                        <span className="ml-auto text-xs text-gray-500">{(patient?.documents?.filter(d => d.type === 'prescription') || []).length}</span>
+                                        {expandedSections.prescriptions ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                    </button>
+                                    {expandedSections.prescriptions && (
+                                        <div className="px-4 pb-3 space-y-2">
+                                            {(!patient || !patient.documents || (patient.documents.filter(d => d.type === 'prescription')).length === 0) && (
+                                                <div className="text-sm text-gray-500">No prescriptions.</div>
+                                            )}
+                                            {(patient?.documents?.filter(d => d.type === 'prescription') || [])
+                                                .slice(0, showAllPrescriptionDocs ? undefined : 3)
+                                                .map((doc, index) => (
+                                                    <div key={doc.id} className="border rounded-md">
+                                                        <button
+                                                            type="button"
+                                                            className="w-full px-3 py-2 flex items-center justify-between"
+                                                            onClick={() => togglePrescriptionDoc(String(doc.id))}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <FileText className="w-4 h-4 text-gray-600" />
+                                                                <span className="text-sm text-gray-800">{doc.name || patient?.name || 'Prescription'}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-xs text-gray-500">{doc?.createdAt ? new Date(doc.createdAt).toLocaleDateString() : ''}</span>
+                                                                {expandedPrescriptionDocs[String(doc.id)] ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                                            </div>
+                                                        </button>
+                                                        {expandedPrescriptionDocs[String(doc.id)] && (
+                                                            <div className="px-3 pb-3">
+                                                                {isImageUrl(doc.file_url) && (
+                                                                    <img src={doc.file_url} alt={doc.name} className="w-full max-h-80 object-contain rounded" />
+                                                                )}
+                                                                {isPdfUrl(doc.file_url) && (
+                                                                    <div className="w-full h-80">
+                                                                        <iframe src={doc.file_url || ''} className="w-full h-full rounded" title={doc.name}></iframe>
+                                                                    </div>
+                                                                )}
+                                                                {!isImageUrl(doc.file_url) && !isPdfUrl(doc.file_url) && (
+                                                                    <div className="text-xs text-gray-500">No preview available.</div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            {(patient?.documents?.filter(d => d.type === 'prescription') || []).length > 3 && (
+                                                <div className="pt-1">
+                                                    <Button type="button" size="sm" variant="outline" onClick={() => setShowAllPrescriptionDocs(s => !s)}>
+                                                        {showAllPrescriptionDocs ? 'Show Less' : 'View All'}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 🏥 Diagnoses/Conditions */}
+                                <div className="border rounded-md">
+                                    <button type="button" className="w-full px-4 py-2 flex items-center gap-2" onClick={() => toggleSection('diagnoses')}>
+                                        <Stethoscope className="w-4 h-4 text-rose-600" />
+                                        <span className="text-sm font-medium">Diagnoses / Conditions</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.diagnoses.length}</span>
+                                        {expandedSections.diagnoses ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                    </button>
+                                    {expandedSections.diagnoses && (
+                                        <div className="px-4 pb-3 space-y-2">
+                                            {patientHistory.diagnoses.length === 0 && (
+                                                <div className="text-sm text-gray-500">No diagnoses.</div>
+                                            )}
+                                            {patientHistory.diagnoses.map(d => (
+                                                <div key={d.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${d.severity === 'high' ? 'bg-red-100 text-red-700' : d.severity === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{d.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 📅 Visit Timeline */}
+                                <div className="border rounded-md">
+                                    <button type="button" className="w-full px-4 py-2 flex items-center gap-2" onClick={() => toggleSection('visits')}>
+                                        <CalendarIcon className="w-4 h-4 text-emerald-600" />
+                                        <span className="text-sm font-medium">Visit Timeline</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.visits.length}</span>
+                                        {expandedSections.visits ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                    </button>
+                                    {expandedSections.visits && (
+                                        <div className="px-4 pb-3 space-y-2">
+                                            {patientHistory.visits.length === 0 && (
+                                                <div className="text-sm text-gray-500">No visits.</div>
+                                            )}
+                                            <div className="overflow-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead className="text-xs">Date</TableHead>
+                                                            <TableHead className="text-xs">Location</TableHead>
+                                                            <TableHead className="text-xs">Notes</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {patientHistory.visits.map(v => (
+                                                            <TableRow key={v.id}>
+                                                                <TableCell className="text-xs">{new Date(v.date).toLocaleString()}</TableCell>
+                                                                <TableCell className="text-xs">{v.location || '-'}</TableCell>
+                                                                <TableCell className="text-xs">{v.note || '-'}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            Additional Notes
-                        </h4>
-                        <Textarea
-                            label="Additional Information"
-                            value={formData.additionalNotes}
-                            onChange={(e) => updateFormData('additionalNotes', e.target.value)}
-                            placeholder="Any additional notes, observations, or special instructions"
-                            disabled={loading}
-                            rows={3}
-                        />
+                        )}
                     </div>
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleClose}
-                            disabled={loading}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            className="bg-green-600 hover:bg-green-700 focus:ring-green-500"
-                            loading={loading}
-                        >
-                            Add Patient
-                        </Button>
-                    </div>
-                </form>
+                </div>
             )}
         </Modal>
     );

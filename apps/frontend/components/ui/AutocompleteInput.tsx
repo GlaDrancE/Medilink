@@ -33,8 +33,8 @@ const fetchMedicines = async (query: string): Promise<AlgoliaHit[]> => {
                 params: `query=${encodeURIComponent(query)}&hitsPerPage=8&clickAnalytics=true`
             })
         });
-        console.log(res)
         const data = await res.json();
+        console.log(data)
         const hits = (data.hits || []).map((hit: any) => ({
             display_name: hit.display_name,
             brand_name: hit.brand_name

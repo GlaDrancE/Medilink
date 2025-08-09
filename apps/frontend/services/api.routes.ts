@@ -66,6 +66,14 @@ export const getDoctorById = async () => {
         throw error
     }
 }
+export const getAllDoctors = async () => {
+    try {
+        const response = await api.get(`/doctor/all`)
+        return response;
+    } catch (error) {
+        throw error
+    }
+}
 export const createDoctor = async (data: Doctor) => {
     try {
         const response = await api.post(`/doctor`, data)
@@ -115,6 +123,31 @@ export const getPatientById = async () => {
     try {
         const response = await api.get(`/patient`)
         return response.data;
+    } catch (error) {
+        throw error
+    }
+}
+export const uploadDocument = async (data: { fileUrl: string, type: string }) => {
+    try {
+        const response = await api.put('/patient/document', data)
+        return response.data;
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
+}
+
+
+
+// Upload Cloudinary 
+export const uploadFile = async (formData: FormData) => {
+    try {
+        const response = await axios.post(`https://api.cloudinary.com/v1_1/dduj1ln0v/image/upload`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        })
+        return response;
     } catch (error) {
         throw error
     }

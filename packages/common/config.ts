@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-
-dotenv.config();
+import path from 'path'
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const config = {
     port: process.env.PORT || 3000,
@@ -19,4 +19,19 @@ OQIDAQAB
 -----END PUBLIC KEY-----
 `,
     },
+
+    email: {
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: process.env.EMAIL_PORT || 587,
+        secure: process.env.EMAIL_SECURE || false,
+        auth: {
+            user: process.env.EMAIL_USER || 'your-email@gmail.com',
+            pass: process.env.EMAIL_PASS || 'your-password',
+        },
+        googleOauth2: {
+            clientId: process.env.GOOGLE_CLIENT_ID || '',
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            refreshToken: process.env.GOOGLE_REFRESH_TOKEN || '',
+        }
+    }
 }

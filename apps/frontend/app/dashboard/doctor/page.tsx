@@ -1,16 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import AddPatientModal from '@/components/AddPatientModal';
 import { RedirectToSignIn, useAuth } from '@clerk/nextjs';
 import { useUser } from '@clerk/nextjs';
-import { addPrescription, getDoctorById } from '@/services/api.routes';
-import { Doctor, Prescriptions } from '@/types';
-import { createDoctor } from '@/services/api.routes';
-import axios from 'axios';
+import { addPrescription, getAllDoctors } from '@/services/api.routes';
+import { Prescriptions } from '@/types';
 
 interface PatientData {
     phone: string;
@@ -43,6 +40,7 @@ export default function DoctorDashboard() {
             age: 0,
             gender: '',
             weight: 0,
+            height: 0,
             is_active: true,
         },
         doctor: {
@@ -85,7 +83,8 @@ export default function DoctorDashboard() {
         })();
         const fetchDoctor = async () => {
             try {
-                const response = await getDoctorById()
+                const response = await getAllDoctors()
+                console.log(response.data)
                 if (response.status !== 200) {
                     // const create = createDoctor({
                     //     email: user
@@ -153,6 +152,7 @@ export default function DoctorDashboard() {
                 age: 0,
                 gender: '',
                 weight: 0,
+                height: 0,
                 is_active: true,
             },
             disease: '',
@@ -428,6 +428,7 @@ export default function DoctorDashboard() {
                 onClose={handleCloseModal}
                 onSubmit={handleAddPatient}
             />
+
         </div>
     );
 } 

@@ -5,7 +5,7 @@ import { authMiddleware } from "../middleware/authMiddleware";
 const router: Router = Router();
 
 router.get("/doctor", authMiddleware as RequestHandler, getDoctorById)
-router.get("/doctor", authMiddleware as RequestHandler, getAllDoctors)
+router.get("/doctor/all", authMiddleware as RequestHandler, getAllDoctors)
 router.put("/doctor/:id", authMiddleware as RequestHandler, updateDoctor)
 router.delete("/doctor", authMiddleware as RequestHandler, deleteDoctor)
 

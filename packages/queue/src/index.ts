@@ -5,4 +5,4 @@ const queue = new Queue("otp-queue", {
     connection: redisClient,
 })
 
-export { queue };
+export { queue, emailQueue };

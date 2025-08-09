@@ -44,6 +44,13 @@ export const getPatientById = async (req: Request, res: Response) => {
                         index: 'asc'
                     }
                 },
+                documents: {
+                    select: {
+                        file_url: true,
+                        type: true,
+                        name: true,
+                    }
+                }
             }
         });
         if (!patient) res.status(404).json({ message: "Patient not found" });
@@ -66,6 +73,35 @@ export const searchPatientByPhone = async (req: Request, res: Response) => {
             where: {
                 phone: phone,
                 is_active: true
+            },
+            include: {
+                prescriptions: {
+                    include: {
+                        medicine_list: true,
+                        checkups: true,
+                        doctor: {
+                            select: {
+                                name: true,
+                                specialization: true,
+                                hospital: true,
+                                experience: true
+                            }
+                        }
+                    },
+                    orderBy: {
+                        index: 'asc'
+                    }
+                },
+                documents: {
+                    select: {
+                        id: true,
+                        file_url: true,
+                        type: true,
+                        name: true,
+                        createdAt: true,
+                        updatedAt: true
+                    }
+                }
             }
         });
 
@@ -100,3 +136,36 @@ export const deletePatient = async (req: Request, res: Response) => {
     }
 };
 
+
+
+
+export const uploadDocument = async (req: Request, res: Response) => {
+    const patientId = req.userId
+    const fileUrl = req.body.fileUrl;
+    const type = req.body.type;
+    try {
+        const document = await prisma.$transaction(async (tx) => {
+            const patient = await tx.patient.findFirst({ where: { id: patientId } })
+            console.log("Calling controller")
+            if (!patient) throw new Error("Patient not found")
+            const newDocument = await tx.document.create({
+                data: {
+                    patient_id: patientId,
+                    file_url: fileUrl,
+                    type: type,
+                }
+            })
+            await tx.patient.update({
+                where: { id: patientId },
+                data: {
+                    document_id: newDocument.id,
+                }
+            })
+        })
+        console.log(document)
+        res.status(200).json(document);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: (error as Error).message });
+    }
+}

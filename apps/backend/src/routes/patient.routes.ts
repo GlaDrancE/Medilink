@@ -1,9 +1,10 @@
 import { RequestHandler, Router } from "express";
-import { createPatient, getPatientById, updatePatient, deletePatient, searchPatientByPhone } from "../controller/patient.controller";
+import { createPatient, getPatientById, updatePatient, deletePatient, searchPatientByPhone, uploadDocument } from "../controller/patient.controller";
 import { authMiddleware } from "../middleware/patientAuthMiddleware";
 
 export const router: Router = Router();
 
+router.put("/patient/document", authMiddleware as RequestHandler, uploadDocument);
 router.post("/patient", createPatient);
 router.get("/patient/search", searchPatientByPhone as RequestHandler);
 router.get("/patient", authMiddleware as RequestHandler, getPatientById);

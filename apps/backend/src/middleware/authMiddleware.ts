@@ -11,7 +11,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
             return res.status(401).json({ message: 'Unauthorized' });
         }
         const decoded = verifyToken(token) as { id: string, role: string, sub: string }
-        console.log(decoded)
         if (decoded.sub) {
             req.userId = decoded.sub
         }
@@ -21,7 +20,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         }
         next();
     } catch (error) {
-        console.log(error)
         return res.status(401).json({ message: 'Unauthorized' });
     }
 }

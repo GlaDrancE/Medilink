@@ -12,6 +12,7 @@ export default function RootLayout({
             <body>
                 <AuthProvider>
                     {children}
+                    <DoctorProfileWrapper />
                 </AuthProvider>
             </body>
         </html>

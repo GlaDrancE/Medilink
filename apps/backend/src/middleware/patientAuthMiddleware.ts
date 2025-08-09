@@ -4,7 +4,6 @@ import { config } from "@repo/common";
 import { verifyToken } from "../utils/jwt";
 
 const PATIENT_JWT_SECRET: jwt.Secret = process.env.PATIENT_JWT || "random";
-console.log(PATIENT_JWT_SECRET)
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     try {
 
@@ -12,13 +11,10 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         if (!token) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        console.log(token)
         const decoded = jwt.verify(token, PATIENT_JWT_SECRET) as { id: string };
-        console.log(decoded)
         req.userId = decoded.id;
         next();
     } catch (error) {
-        console.log(error)
         return res.status(401).json({ message: 'Unauthorized' });
     }
 }

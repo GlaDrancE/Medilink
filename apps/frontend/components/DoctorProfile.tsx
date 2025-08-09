@@ -6,7 +6,6 @@ import { updateDoctorProfile } from "@/services/api.routes";
 
 interface DoctorProfileData {
     id: string;
-    username: string;
     clinicName: string;
     clinicAddress: string;
     clinicPhoneNumber: string;
@@ -32,7 +31,6 @@ export default function DoctorProfileModal({ isOpen, onClose, onSuccess }: Docto
 
     const [formData, setFormData] = useState<DoctorProfileData>({
         id: "",
-        username: "",
         clinicName: "",
         clinicAddress: "",
         clinicPhoneNumber: "",
@@ -134,19 +132,6 @@ export default function DoctorProfileModal({ isOpen, onClose, onSuccess }: Docto
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-900">Username</label>
-                            <input
-                                type="text"
-                                value={formData.username}
-                                onChange={(e) => handleInputChange("username", e.target.value)}
-                                placeholder="Enter your username"
-                                className={`w-full rounded-md px-3.5 py-2 text-sm outline-none ring-1 ring-inset ${errors.username ? "ring-red-400" : "ring-gray-300 hover:ring-gray-400"
-                                    } focus:ring-[1.5px] focus:ring-blue-600`}
-                            />
-                            {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
-                        </div>
-
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-900">Clinic Name</label>
                             <input

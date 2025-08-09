@@ -45,7 +45,7 @@ model Doctor {
 }
 
 model Patient {
-  id              String    @id @default(uuid())
+  id              String     @id @default(uuid())
   doctor_id       String?
   name            String?
   email           String?
@@ -59,12 +59,25 @@ model Patient {
   blood_group     String?
   allergies       String[]
   medical_history String[]
-  is_active       Boolean   @default(true)
-  doctor          Doctor?   @relation(fields: [doctor_id], references: [id])
+  is_active       Boolean    @default(true)
+  doctor          Doctor?    @relation(fields: [doctor_id], references: [id])
+  document_id     String?
+  documents       Document[]
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   prescriptions Prescriptions[]
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  patient_id String
+  file_url   String
+  type       String
+  name       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  patient    Patient  @relation(fields: [patient_id], references: [id])
 }
 
 model Prescriptions {
