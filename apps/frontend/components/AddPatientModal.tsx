@@ -8,7 +8,7 @@ import Textarea from './ui/Textarea';
 import { Button } from '@/components/ui/button';
 import AutocompleteInput from './ui/AutocompleteInput';
 import Calendar from './ui/Calendar';
-import { MedicineEntry, Patient, Prescriptions } from '@/types';
+import type { Document as PatientDocument, MedicineEntry, Patient, Prescriptions } from '@/types';
 import { createPatient, searchPatientByPhone } from '@/services/api.routes';
 import { validatePhoneNumber, formatPhoneNumber } from '@/lib/validation';
 import { useUser } from '@clerk/nextjs';
@@ -140,7 +140,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     const [historyLoading, setHistoryLoading] = useState(false);
     const [patientHistory, setPatientHistory] = useState<{
         labTests: Array<{ id: string; name: string; date: string; summary?: string; pdfUrl?: string }>,
-        prescriptions: Prescriptions[],
+        prescriptions: Array<Prescriptions | PatientDocument>,
         diagnoses: Array<{ id: string; name: string; severity?: 'low' | 'medium' | 'high' }>,
         visits: Array<{ id: string; date: string; location?: string; note?: string }>
     }>({ labTests: [], prescriptions: [], diagnoses: [], visits: [] });
@@ -163,13 +163,13 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             try {
                 // TODO: Replace with real API call (doctor-facing) to fetch patient history by id
                 // For now, keep placeholders so UI is scannable even without data
-                setPatientHistory(prev => ({
-                    ...prev,
-                    prescriptions: [],
-                    labTests: [],
-                    diagnoses: [],
-                    visits: [],
-                }));
+                // setPatientHistory(prev => ({
+                //     ...prev,
+                //     prescriptions: [],
+                //     labTests: [],
+                //     diagnoses: [],
+                //     visits: [],
+                // }));
             } catch (e) {
                 // noop
             } finally {
@@ -202,6 +202,12 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     const isImageUrl = (url: string | undefined) => {
         if (!url) return false;
         return /\.(png|jpe?g|gif|bmp|webp|svg)(\?|$)/i.test(url);
+    };
+
+    const isPatientDocument = (
+        item: Prescriptions | PatientDocument
+    ): item is PatientDocument => {
+        return (item as PatientDocument).file_url !== undefined;
     };
 
     // Phone number search with debounce
@@ -252,6 +258,22 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             }
         };
     }, [phoneNumber]);
+
+    useEffect(() => {
+        if (patient) {
+            patient.prescriptions?.forEach(prescription => {
+                patient.documents?.forEach(doc => {
+                    if (new Date(prescription.createdAt) <= new Date(doc.createdAt)) {
+                        setPatientHistory(prev => ({ ...prev, prescriptions: [...prev.prescriptions as any, prescription] }))
+                    }
+                })
+            })
+        }
+    }, [patient]);
+
+    useEffect(() => {
+        console.log("patientHistory", patientHistory)
+    }, [patientHistory])
 
     const validateForm = (): boolean => {
         const newErrors: Partial<PatientData> = {};
@@ -358,6 +380,8 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                     prescription_date: new Date().toISOString(),
                     is_active: true,
                     nextAppointment: new Date(),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 });
             } else {
                 onSubmit({
@@ -391,6 +415,8 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                     prescription_date: new Date().toISOString(),
                     is_active: true,
                     nextAppointment: new Date(),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 })
             }
             handleClose();
@@ -1067,7 +1093,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                     {expandedSections.labs && (
                                         <div className="px-4 pb-3 space-y-2">
                                             {(!patient || !patient.documents || (patient.documents.filter(d => d.type === 'lab')).length === 0) && (
-                                                <div className="text-sm text-gray-500">No prescriptions.</div>
+                                                <div className="text-sm text-gray-500">No reports.</div>
                                             )}
                                             {patient?.documents?.length && (patient.documents.filter(doc => doc.type === 'lab').slice(0, 3)).map((test, index) => {
                                                 return (
@@ -1121,50 +1147,98 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                         <Pill className="w-4 h-4 text-blue-600" />
                                         <span className="text-sm font-medium">Previous Prescriptions</span>
                                         <span className="ml-2 text-xs text-gray-500">(latest 3)</span>
-                                        <span className="ml-auto text-xs text-gray-500">{(patient?.documents?.filter(d => d.type === 'prescription') || []).length}</span>
+                                        <span className="ml-auto text-xs text-gray-500">{patientHistory.prescriptions.length}</span>
                                         {expandedSections.prescriptions ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
                                     </button>
                                     {expandedSections.prescriptions && (
                                         <div className="px-4 pb-3 space-y-2">
-                                            {(!patient || !patient.documents || (patient.documents.filter(d => d.type === 'prescription')).length === 0) && (
+                                            {patientHistory.prescriptions.length === 0 && (
                                                 <div className="text-sm text-gray-500">No prescriptions.</div>
+
                                             )}
-                                            {(patient?.documents?.filter(d => d.type === 'prescription') || [])
+                                            {(patientHistory.prescriptions)
                                                 .slice(0, showAllPrescriptionDocs ? undefined : 3)
-                                                .map((doc, index) => (
-                                                    <div key={doc.id} className="border rounded-md">
+                                                .map((prescription, index) => (
+
+
+                                                    <div key={index} className="border rounded-md">
                                                         <button
                                                             type="button"
                                                             className="w-full px-3 py-2 flex items-center justify-between"
-                                                            onClick={() => togglePrescriptionDoc(String(doc.id))}
+                                                            onClick={() => togglePrescriptionDoc(String(prescription.id))}
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <FileText className="w-4 h-4 text-gray-600" />
-                                                                <span className="text-sm text-gray-800">{doc.name || patient?.name || 'Prescription'}</span>
+                                                                <span className="text-sm text-gray-800">{prescription.name || patient?.name || 'Prescription'}</span>
                                                             </div>
                                                             <div className="flex items-center gap-3">
-                                                                <span className="text-xs text-gray-500">{doc?.createdAt ? new Date(doc.createdAt).toLocaleDateString() : ''}</span>
-                                                                {expandedPrescriptionDocs[String(doc.id)] ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                                                <span className="text-xs text-gray-500">{prescription?.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : ''}</span>
+                                                                {expandedPrescriptionDocs[String(prescription.id)] ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
                                                             </div>
                                                         </button>
-                                                        {expandedPrescriptionDocs[String(doc.id)] && (
+                                                        {expandedPrescriptionDocs && expandedPrescriptionDocs[String(prescription.id)] && (isPatientDocument(prescription) ? (
                                                             <div className="px-3 pb-3">
-                                                                {isImageUrl(doc.file_url) && (
-                                                                    <img src={doc.file_url} alt={doc.name} className="w-full max-h-80 object-contain rounded" />
+                                                                {isImageUrl(prescription.file_url) && (
+                                                                    <img src={prescription.file_url} alt={prescription.name} className="w-full max-h-80 object-contain rounded" />
                                                                 )}
-                                                                {isPdfUrl(doc.file_url) && (
+                                                                {isPdfUrl(prescription.file_url) && (
                                                                     <div className="w-full h-80">
-                                                                        <iframe src={doc.file_url || ''} className="w-full h-full rounded" title={doc.name}></iframe>
+                                                                        <iframe src={prescription.file_url || ''} className="w-full h-full rounded" title={prescription.name}></iframe>
                                                                     </div>
                                                                 )}
-                                                                {!isImageUrl(doc.file_url) && !isPdfUrl(doc.file_url) && (
+                                                                {!isImageUrl(prescription.file_url) && !isPdfUrl(prescription.file_url) && (
                                                                     <div className="text-xs text-gray-500">No preview available.</div>
                                                                 )}
                                                             </div>
-                                                        )}
+                                                        ) : (
+                                                            <div key={index} className="rounded-md border p-2 bg-white">
+                                                                <div className="text-xs font-semibold text-gray-700 mb-1">Medicines</div>
+                                                                <div className="overflow-auto">
+                                                                    <Table>
+                                                                        <TableHeader>
+                                                                            <TableRow>
+                                                                                <TableHead className="text-xs font-semibold">Medicine</TableHead>
+                                                                                <TableHead className="text-xs font-semibold">Dosage</TableHead>
+                                                                                <TableHead className="text-xs font-semibold">Duration</TableHead>
+                                                                            </TableRow>
+                                                                        </TableHeader>
+                                                                        <TableBody>
+                                                                            {prescription.medicine_list.map((med) => (
+                                                                                <TableRow key={med.id}>
+                                                                                    <TableCell className="text-xs font-medium text-gray-900">{med.name}</TableCell>
+                                                                                    <TableCell className="text-[11px] text-gray-800">
+                                                                                        <div className="flex gap-1 items-center">
+                                                                                            <span className="px-1 rounded bg-gray-100">M: {med.dosage.morning || '-'}</span>
+                                                                                            <span className="px-1 rounded bg-gray-100">A: {med.dosage.afternoon || '-'}</span>
+                                                                                            <span className="px-1 rounded bg-gray-100">N: {med.dosage.night || '-'}</span>
+                                                                                        </div>
+                                                                                    </TableCell>
+                                                                                    <TableCell className="text-[11px] text-gray-800">{med.notes || '-'}</TableCell>
+                                                                                </TableRow>
+                                                                            ))}
+                                                                        </TableBody>
+                                                                    </Table>
+                                                                </div>
+                                                                <div className="mt-2 pt-2 border-t">
+                                                                    <div className="text-xs font-semibold text-gray-700 mb-1">Suggested Checkups / Tests</div>
+                                                                    {prescription.checkups && prescription.checkups.length > 0 ? (
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            {prescription.checkups.map((c) => (
+                                                                                <span key={c.id} className="text-xs font-bold text-gray-900">{c.name}</span>
+                                                                            ))}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-[11px] text-gray-500">None</div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                ))}
-                                            {(patient?.documents?.filter(d => d.type === 'prescription') || []).length > 3 && (
+                                                )
+                                                )
+                                            }
+
+                                            {patientHistory.prescriptions.length > 3 && (
                                                 <div className="pt-1">
                                                     <Button type="button" size="sm" variant="outline" onClick={() => setShowAllPrescriptionDocs(s => !s)}>
                                                         {showAllPrescriptionDocs ? 'Show Less' : 'View All'}

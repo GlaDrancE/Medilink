@@ -63,8 +63,8 @@ export interface Prescriptions {
     prescription_date: string
     prescription_text: string
     is_active: boolean
-    createdAt?: string
-    updatedAt?: string
+    createdAt: Date
+    updatedAt: Date
     medicine_list: MedicineEntry[]
     checkups?: Checkup[]
     doctor: Doctor

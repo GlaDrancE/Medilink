@@ -80,7 +80,7 @@ export const addPrescription = async (req: Request, res: Response) => {
                     name: medicine.name,
                     dosage: medicine.dosage,
                     time: medicine.time,
-                    before_after_food: medicine.food.toUpperCase(),
+                    before_after_food: medicine.before_after_food.toUpperCase(),
                     prescription_id: prescription.id,
                 }))
             });
