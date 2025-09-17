@@ -18,6 +18,7 @@ export const useDoctorProfileModal = () => {
         const profileCompleted = localStorage.getItem("doctorProfileCompleted") === "true";
 
         if (!doctor?.hospital) {
+            console.log(doctor)
             // Show modal after 3 seconds
             const timer = setTimeout(() => {
                 setIsModalOpen(true);

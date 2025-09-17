@@ -8,14 +8,17 @@ const SALT_ROUNDS = 10;
 export const getDoctorById = async (req: Request, res: Response) => {
     try {
         const id = req.userId;
+        console.log(id)
         const doctor = await prisma.doctor.findUnique({
             where: {
                 id: id as string
             }
         })
+        console.log(doctor)
         res.status(200).json(doctor);
 
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: (error as Error).message });
     }
 };
@@ -26,6 +29,7 @@ export const getAllDoctors = async (_req: Request, res: Response) => {
         const doctors = await prisma.doctor.findMany();
         res.status(200).json(doctors);
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: (error as Error).message });
     }
 };
@@ -50,6 +54,7 @@ export const updateDoctor = async (req: Request, res: Response) => {
         });
         res.status(200).json(doctor);
     } catch (error) {
+        console.log(error)
         res.status(400).json({ error: (error as Error).message });
     }
 };

@@ -6,24 +6,8 @@ import { Button } from '@/components/ui/button';
 import AddPatientModal from '@/components/AddPatientModal';
 import { RedirectToSignIn, useAuth } from '@clerk/nextjs';
 import { useUser } from '@clerk/nextjs';
-import { addPrescription, getAllDoctors } from '@/services/api.routes';
+import { addPrescription } from '@/services/api.routes';
 import { Prescriptions } from '@/types';
-
-interface PatientData {
-    phone: string;
-    name: string;
-    age: string;
-    gender: string;
-    weight: string;
-    disease: string;
-    medicines: string;
-    nextAppointment: string;
-    healthCheckupNeeded: boolean;
-    suggestedHospital: string;
-    suggestedDoctor: string;
-    expectedTime: string;
-    additionalNotes: string;
-}
 
 export default function DoctorDashboard() {
     const auth = useAuth();
@@ -68,9 +52,15 @@ export default function DoctorDashboard() {
         patient_id: '',
         checkups: [],
         is_active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
     });
-    const [formErrors, setFormErrors] = useState<Partial<PatientData>>({});
     const [formLoading, setFormLoading] = useState(false);
+
+    // Connectivity / Sync Status
+    type Connectivity = 'online' | 'offline' | 'syncing';
+    const [connectivity, setConnectivity] = useState<Connectivity>(typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline');
+    const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
 
 
 
@@ -81,50 +71,20 @@ export default function DoctorDashboard() {
                 localStorage.setItem("token", token);
             }
         })();
-        const fetchDoctor = async () => {
-            try {
-                const response = await getAllDoctors()
-                console.log(response.data)
-                if (response.status !== 200) {
-                    // const create = createDoctor({
-                    //     email: user
-                    // })
-                }
-            } catch (error) {
-                console.error(error)
-            }
-
-        }
+        const handleOnline = () => setConnectivity('online');
+        const handleOffline = () => setConnectivity('offline');
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
     }, [auth]);
 
 
     const handleLogout = () => {
         auth.signOut();
     };
-
-    // Form options
-    const genderOptions = [
-        { value: 'male', label: 'Male' },
-        { value: 'female', label: 'Female' },
-        { value: 'other', label: 'Other' }
-    ];
-
-    const hospitalOptions = [
-        { value: 'city-general', label: 'City General Hospital' },
-        { value: 'st-marys', label: 'St. Mary\'s Medical Center' },
-        { value: 'central-clinic', label: 'Central Health Clinic' },
-        { value: 'metro-hospital', label: 'Metro Hospital' },
-        { value: 'specialty-care', label: 'Specialty Care Center' }
-    ];
-
-    const doctorOptions = [
-        { value: 'dr-smith', label: 'Dr. John Smith (Cardiologist)' },
-        { value: 'dr-johnson', label: 'Dr. Emily Johnson (Neurologist)' },
-        { value: 'dr-brown', label: 'Dr. Michael Brown (Orthopedic)' },
-        { value: 'dr-davis', label: 'Dr. Sarah Davis (Dermatologist)' },
-        { value: 'dr-wilson', label: 'Dr. David Wilson (Radiologist)' },
-        { value: 'dr-garcia', label: 'Dr. Maria Garcia (Pathologist)' }
-    ];
 
     const handleAddPatient = async (patientData: Prescriptions) => {
         // e.preventDefault();
@@ -134,6 +94,12 @@ export default function DoctorDashboard() {
             alert('Patient added successfully!');
             const response = await addPrescription(patientData)
             // handleCloseModal();
+            setConnectivity('syncing');
+            // Simulate sync finish
+            setTimeout(() => {
+                setConnectivity(navigator.onLine ? 'online' : 'offline');
+                setLastSyncAt(new Date());
+            }, 600);
         } catch (error) {
             console.error('Error adding patient:', error);
             alert('Error adding patient. Please try again.');
@@ -181,17 +147,36 @@ export default function DoctorDashboard() {
                 is_rejected: false,
             },
             checkups: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
         });
-        setFormErrors({});
         setIsAddPatientModalOpen(false);
     };
 
-    const updateFormData = (field: keyof PatientData, value: string | boolean) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-        if (formErrors[field]) {
-            setFormErrors(prev => ({ ...prev, [field]: undefined }));
-        }
-    };
+    // Mock data for UI (replace with real API data later)
+    type AppointmentStatus = 'Scheduled' | 'Checked-in' | 'Waiting';
+    const todaysAppointments: { time: string; patient: string; status: AppointmentStatus }[] = [
+        { time: '09:00', patient: 'John Doe', status: 'Checked-in' },
+        { time: '10:30', patient: 'Sarah Wilson', status: 'Scheduled' },
+        { time: '11:15', patient: 'Mike Johnson', status: 'Waiting' },
+        { time: '14:00', patient: 'Anna Lee', status: 'Scheduled' },
+    ];
+
+    const upcomingFollowUps: { name: string; date: string; reason: string }[] = [
+        { name: 'Peter Parker', date: 'Tomorrow 10:00', reason: 'Bloodwork review' },
+        { name: 'Bruce Wayne', date: 'Thu 14:30', reason: 'Post-op check' },
+    ];
+
+    const missedAppointments: { name: string; date: string }[] = [
+        { name: 'Clark Kent', date: 'Today 12:00' },
+        { name: 'Diana Prince', date: 'Mon 16:00' },
+    ];
+
+    const recentPatients: { name: string; lastPrescription: string; next?: string }[] = [
+        { name: 'Tony Stark', lastPrescription: 'Atorvastatin 10mg nightly', next: 'Fri 11:00' },
+        { name: 'Natasha Romanoff', lastPrescription: 'Ibuprofen PRN', next: undefined },
+        { name: 'Steve Rogers', lastPrescription: 'Vitamin D 1000 IU daily', next: 'Next week' },
+    ];
 
     if (!isLoaded) {
         return (
@@ -209,24 +194,31 @@ export default function DoctorDashboard() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <header className="bg-white shadow-sm border-b">
+            <header className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-4">
-                        <div className="flex items-center">
-                            <h1 className="text-2xl font-bold text-gray-900">MediLink</h1>
-                            <span className="ml-4 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-                                Doctor Portal
-                            </span>
+                    <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-3">
+                            <h1 className="text-2xl font-semibold text-gray-900">Doctor Dashboard</h1>
+                            <span className="px-2 py-0.5 rounded text-xs border text-gray-600">Lite EMR</span>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <span className="text-gray-700">Welcome, {user?.username}</span>
-                            <Button
-                                onClick={handleLogout}
-                                variant="outline"
-                                size="sm"
-                            >
-                                Logout
-                            </Button>
+                            <div className="flex items-center space-x-2">
+                                <span
+                                    className={
+                                        connectivity === 'online'
+                                            ? 'inline-block w-2 h-2 rounded-full bg-green-500'
+                                            : connectivity === 'offline'
+                                                ? 'inline-block w-2 h-2 rounded-full bg-red-500'
+                                                : 'inline-block w-2 h-2 rounded-full bg-yellow-500'
+                                    }
+                                />
+                                <span className="text-sm text-gray-600 capitalize">{connectivity}</span>
+                                {lastSyncAt && (
+                                    <span className="text-xs text-gray-400">Last sync {lastSyncAt.toLocaleTimeString()}</span>
+                                )}
+                            </div>
+                            <span className="text-gray-700">{user?.username}</span>
+                            <Button onClick={handleLogout} variant="outline" size="sm">Logout</Button>
                         </div>
                     </div>
                 </div>
@@ -234,191 +226,99 @@ export default function DoctorDashboard() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                        Welcome back, {user?.username}!
-                    </h2>
-                    <p className="text-gray-600">
-                        Manage your practice and patient care from your professional dashboard.
-                    </p>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Today's Appointments</p>
-                                <p className="text-2xl font-bold text-gray-900">8</p>
-                            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Today's Appointments */}
+                    <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-2">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-base font-semibold text-gray-900">Today's Appointments</h3>
+                            <span className="text-sm text-gray-500">{todaysAppointments.length} total</span>
                         </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Active Patients</p>
-                                <p className="text-2xl font-bold text-gray-900">142</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Pending Reviews</p>
-                                <p className="text-2xl font-bold text-gray-900">5</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">This Month</p>
-                                <p className="text-2xl font-bold text-gray-900">89</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white rounded-lg shadow mb-8">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
-                    </div>
-                    <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <Button
-                                className="h-20 flex-col space-y-2 bg-green-600 hover:bg-green-700"
-                                onClick={() => setIsAddPatientModalOpen(true)}
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                <span>Add Patient</span>
-                            </Button>
-
-                            <Button variant="outline" className="h-20 flex-col space-y-2 border-green-300 text-green-700 hover:bg-green-50">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                <span>Patient Records</span>
-                            </Button>
-
-                            <Button variant="outline" className="h-20 flex-col space-y-2 border-green-300 text-green-700 hover:bg-green-50">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <span>Prescriptions</span>
-                            </Button>
-
-                            <Button variant="outline" className="h-20 flex-col space-y-2 border-green-300 text-green-700 hover:bg-green-50">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                                <span>Analytics</span>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Today's Schedule */}
-                <div className="bg-white rounded-lg shadow mb-8">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h3 className="text-lg font-medium text-gray-900">Today's Schedule</h3>
-                    </div>
-                    <div className="p-6">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                    <div>
-                                        <p className="font-medium text-gray-900">9:00 AM - John Doe</p>
-                                        <p className="text-sm text-gray-600">Routine Checkup</p>
+                        <div className="divide-y">
+                            {todaysAppointments.map((a, idx) => (
+                                <div key={idx} className="py-3 flex items-center justify-between">
+                                    <div className="flex items-center space-x-4">
+                                        <span className="text-sm font-medium text-gray-900 w-16">{a.time}</span>
+                                        <span className="text-sm text-gray-700">{a.patient}</span>
                                     </div>
+                                    <span
+                                        className={
+                                            a.status === 'Checked-in'
+                                                ? 'px-2 py-0.5 text-xs rounded bg-green-100 text-green-700'
+                                                : a.status === 'Waiting'
+                                                    ? 'px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700'
+                                                    : 'px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700'
+                                        }
+                                    >
+                                        {a.status}
+                                    </span>
                                 </div>
-                                <span className="text-sm font-medium text-green-700">In Progress</span>
-                            </div>
+                            ))}
+                        </div>
+                    </section>
 
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                    {/* Quick Actions */}
+                    <section className="bg-white rounded-md border shadow-sm p-4">
+                        <h3 className="text-base font-semibold text-gray-900 mb-3">Quick Actions</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                            <Button className="justify-start" onClick={() => setIsAddPatientModalOpen(true)}>
+                                <span className="mr-2">➕</span> New Patient
+                            </Button>
+                            <Button variant="outline" className="justify-start" onClick={() => alert('Create Prescription flow coming soon')}>
+                                <span className="mr-2">📝</span> Create Prescription
+                            </Button>
+                            <Button variant="outline" className="justify-start" onClick={() => alert('Send Reminder flow coming soon')}>
+                                <span className="mr-2">📨</span> Send Reminder (SMS/WhatsApp)
+                            </Button>
+                        </div>
+                    </section>
+
+                    {/* Upcoming Follow-Ups */}
+                    <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-2">
+                        <h3 className="text-base font-semibold text-gray-900 mb-3">Upcoming Follow-Ups</h3>
+                        <div className="divide-y">
+                            {upcomingFollowUps.map((u, idx) => (
+                                <div key={idx} className="py-3 flex items-center justify-between">
                                     <div>
-                                        <p className="font-medium text-gray-900">10:30 AM - Sarah Wilson</p>
-                                        <p className="text-sm text-gray-600">Follow-up Visit</p>
+                                        <p className="text-sm font-medium text-gray-900">{u.name}</p>
+                                        <p className="text-xs text-gray-600">{u.reason}</p>
                                     </div>
+                                    <span className="text-sm text-gray-700">{u.date}</span>
                                 </div>
-                                <span className="text-sm font-medium text-gray-500">Upcoming</span>
-                            </div>
+                            ))}
+                        </div>
+                    </section>
 
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                                    <div>
-                                        <p className="font-medium text-gray-900">2:00 PM - Mike Johnson</p>
-                                        <p className="text-sm text-gray-600">Consultation</p>
-                                    </div>
+                    {/* Missed Appointments / No-Shows */}
+                    <section className="bg-white rounded-md border shadow-sm p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-base font-semibold text-gray-900">Missed Appointments</h3>
+                            <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">{missedAppointments.length} this week</span>
+                        </div>
+                        <div className="space-y-2">
+                            {missedAppointments.map((m, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-2 rounded border bg-red-50">
+                                    <span className="text-sm text-red-800">{m.name}</span>
+                                    <span className="text-xs text-red-700">{m.date}</span>
                                 </div>
-                                <span className="text-sm font-medium text-gray-500">Upcoming</span>
-                            </div>
+                            ))}
                         </div>
-                    </div>
-                </div>
+                    </section>
 
-                {/* Professional Info */}
-                <div className="bg-green-50 rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-green-900 mb-4">Professional Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p className="text-green-700 font-medium">Name:</p>
-                            <p className="text-green-800">{user.username}</p>
+                    {/* Recent Patients Summary */}
+                    <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-3">
+                        <h3 className="text-base font-semibold text-gray-900 mb-3">Recent Patients</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {recentPatients.map((p, idx) => (
+                                <div key={idx} className="border rounded p-3">
+                                    <p className="text-sm font-medium text-gray-900">{p.name}</p>
+                                    <p className="text-xs text-gray-600 mt-1">{p.lastPrescription}</p>
+                                    {p.next && (
+                                        <p className="text-xs text-gray-700 mt-2">Next: {p.next}</p>
+                                    )}
+                                </div>
+                            ))}
                         </div>
-                        {/* <div>
-                            <p className="text-green-700 font-medium">Specialization:</p>
-                            <p className="text-green-800">{user.specialization || 'Not specified'}</p>
-                        </div> */}
-                        {/* <div>
-                            <p className="text-green-700 font-medium">License Number:</p>
-                            <p className="text-green-800">{user.licenseNumber || 'Not specified'}</p>
-                        </div> */}
-                        <div>
-                            <p className="text-green-700 font-medium">Account Type:</p>
-                            <p className="text-green-800 capitalize">doctor</p>
-                        </div>
-                        <div>
-                            <p className="text-green-700 font-medium">Doctor ID:</p>
-                            <p className="text-green-800">{user.id}</p>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </main>
 

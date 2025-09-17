@@ -6,7 +6,7 @@ const seed = async () => {
         data: {
             id: "user_2zXI6zM5GIXhHMe9sTLu6gHBe2r",
             name: "Ayush",
-            email: "ayushr16060@gmail.com",
+            primary_email_address_id: "ayushr16060@gmail.com",
             password: "ayush123",
             is_active: true,
             is_verified: true,

@@ -1169,7 +1169,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <FileText className="w-4 h-4 text-gray-600" />
-                                                                <span className="text-sm text-gray-800">{prescription.name || patient?.name || 'Prescription'}</span>
+                                                                <span className="text-sm text-gray-800">{prescription?.name || patient?.name || 'Prescription'}</span>
                                                             </div>
                                                             <div className="flex items-center gap-3">
                                                                 <span className="text-xs text-gray-500">{prescription?.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : ''}</span>
