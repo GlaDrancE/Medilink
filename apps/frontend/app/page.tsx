@@ -158,7 +158,7 @@ export default function Home() {
                 <span className="text-sm font-medium text-white dark:text-white light:text-gray-700">Document Secured</span>
               </div>
             </div>
-            <div className="absolute bottom-1/4 left-1/2 transform -translate-x-1/2 backdrop-blur-md bg-white/10 dark:bg-white/10 light:bg-white/60 p-4 rounded-xl border border-white/20 dark:border-white/20 light:border-gray-200/30 shadow-2xl animate-float delay-500">
+            <div className="absolute bottom-1/8 right-1/9 transform -translate-x-1/2 backdrop-blur-md bg-white/10 dark:bg-white/10 light:bg-white/60 p-4 rounded-xl border border-white/20 dark:border-white/20 light:border-gray-200/30 shadow-2xl animate-float delay-500">
               <div className="flex items-center space-x-2">
                 <Activity className="w-4 h-4 text-purple-400" />
                 <span className="text-sm font-medium text-white dark:text-white light:text-gray-700">Real-time Sync</span>

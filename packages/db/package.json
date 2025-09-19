@@ -9,12 +9,13 @@
     ".": "./src/index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "prisma": "^6.16.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@prisma/client": "^6.11.1"
+    "@prisma/client": "6.16.1"
   }
 }

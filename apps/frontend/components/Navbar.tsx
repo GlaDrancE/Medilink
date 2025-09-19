@@ -38,7 +38,7 @@ const Navbar = (props: Props) => {
                         <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
                             <Heart className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-xl font-bold text-white dark:text-white light:text-gray-900 ml-3">MedConnect</span>
+                        <span className="text-xl font-bold text-white dark:text-white light:text-gray-900 ml-3">MEDILINK</span>
                     </div>
 
                     {/* Desktop Navigation */}

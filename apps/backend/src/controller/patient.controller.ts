@@ -3,6 +3,7 @@ import prisma from "@repo/db";
 
 export const createPatient = async (req: Request, res: Response) => {
     try {
+        
         const patient = await prisma.patient.create({ data: req.body });
         res.status(201).json(patient);
     } catch (error) {
