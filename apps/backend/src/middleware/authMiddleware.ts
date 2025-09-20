@@ -7,7 +7,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     try {
 
         const token = req.headers.authorization?.split(' ')[1];
-        console.log(token)
+        console.log("token ", token)
         if (!token) {
             return res.status(401).json({ message: 'Unauthorized' });
         }

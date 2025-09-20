@@ -1,6 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import prisma from '@repo/db';
+import doctorRouter from './routes/doctor.routes'
+import patientRouter from './routes/patient.routes'
+import prescriptionRouter from './routes/prescription.routes'
+import otpRouter from './routes/otp.routes'
+import authRouter from './routes/auth.routes'
 
 const app = express();
 
@@ -10,6 +15,14 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+
+app.use("/api/v1", doctorRouter)
+app.use("/api/v1", patientRouter)
+app.use("/api/v1", prescriptionRouter)
+app.use("/api/v1", otpRouter)
+app.use("/api/v1/auth", authRouter)
+
 
 // Simple auth middleware for development
 const authenticateToken = (req: any, res: any, next: any) => {

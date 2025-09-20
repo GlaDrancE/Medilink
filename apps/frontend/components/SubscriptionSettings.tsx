@@ -7,7 +7,7 @@ import { NotificationPreferences } from '@/components/NotificationPreferences';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import Input from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
   Settings, 
@@ -154,7 +154,7 @@ export const SubscriptionSettings: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      const result = await subscriptionApi.cancelSubscription();
+      const result = await subscriptionApi.cancel();
       
       if (result.success) {
         setSuccess('Subscription cancelled successfully. You will retain access until the end of your billing period.');
@@ -243,14 +243,14 @@ export const SubscriptionSettings: React.FC = () => {
                 <div>
                   <div className="flex items-center space-x-2">
                     <h3 className="text-lg font-medium">
-                      {subscriptionStatus.plan === 'MONTHLY' ? 'Monthly Plan' : 'Yearly Plan'}
+                      {subscriptionStatus.subscription?.planName || 'Subscription'}
                     </h3>
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
                       Active
                     </Badge>
                   </div>
                   <p className="text-gray-600">
-                    {subscriptionStatus.plan === 'MONTHLY' ? '₹99/month' : '₹999/year'}
+                    {subscriptionStatus.subscription?.displayPrice || 'Price not available'}
                   </p>
                   {subscriptionStatus.expiresAt && (
                     <p className="text-sm text-gray-500">

@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Modal from './ui/Modal';
-import Input from './ui/Input';
-import Select from './ui/Select';
-import Textarea from './ui/Textarea';
+import Modal from './ui/modal';
+import Input from './ui/input';
+import Select from './ui/select';
+import { Textarea } from './ui/textarea';
 import { Button } from '@/components/ui/button';
 import AutocompleteInput from './ui/AutocompleteInput';
-import Calendar from './ui/Calendar';
+import Calendar from './ui/calendar';
 import type { Document as PatientDocument, MedicineEntry, Patient, Prescriptions } from '@/types';
 import { createPatient, searchPatientByPhone } from '@/services/api.routes';
 import { validatePhoneNumber, formatPhoneNumber } from '@/lib/validation';
@@ -68,7 +68,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     const [phoneNumber, setPhoneNumber] = useState('');
     const [phoneError, setPhoneError] = useState('');
     const [isSearching, setIsSearching] = useState(false);
-    const [foundPatient, setFoundPatient] = useState<any>(null);
+    const [foundPatient, setFoundPatient] = useState<any[]>([]);
     const [showAddNewOption, setShowAddNewOption] = useState(false);
     const [hospitalOptions, setHospitalOptions] = useState<any[]>([]);
     const [doctorOptions, setDoctorOptions] = useState<any[]>([]);
@@ -220,7 +220,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             const validation = validatePhoneNumber(phoneNumber);
             if (!validation.isValid) {
                 setPhoneError(validation.message);
-                setFoundPatient(null);
+                setFoundPatient([]);
                 setShowAddNewOption(false);
                 return;
             }
@@ -235,11 +235,11 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                     setShowAddNewOption(true);
                 } catch (error: any) {
                     if (error.response?.status === 404) {
-                        setFoundPatient(null);
+                        setFoundPatient([]);
                         setShowAddNewOption(true);
                     } else {
                         setPhoneError('Error searching for patient');
-                        setFoundPatient(null);
+                        setFoundPatient([]);
                         setShowAddNewOption(false);
                     }
                 } finally {
@@ -247,7 +247,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                 }
             }, 500);
         } else {
-            setFoundPatient(null);
+            setFoundPatient([]);
             setShowAddNewOption(false);
             setIsSearching(false);
         }
@@ -516,7 +516,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         setCurrentStep('phone');
         setPhoneNumber('');
         setPhoneError('');
-        setFoundPatient(null);
+        setFoundPatient([]);
         setShowAddNewOption(false);
         setIsSearching(false);
         setFormData({
@@ -642,7 +642,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                             </>
                         )}
 
-                        {showAddNewOption && foundPatient.length <= 0 && !isSearching && (
+                        {showAddNewOption && (!foundPatient || foundPatient.length <= 0) && !isSearching && (
                             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <div className="flex items-center">
                                     <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1169,7 +1169,9 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <FileText className="w-4 h-4 text-gray-600" />
-                                                                <span className="text-sm text-gray-800">{prescription?.name || patient?.name || 'Prescription'}</span>
+                                                                <span className="text-sm text-gray-800">
+                                                                    {'patient' in prescription ? prescription?.patient?.name : prescription?.name || patient?.name || 'Prescription'}
+                                                                </span>
                                                             </div>
                                                             <div className="flex items-center gap-3">
                                                                 <span className="text-xs text-gray-500">{prescription?.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : ''}</span>

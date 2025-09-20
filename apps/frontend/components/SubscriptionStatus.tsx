@@ -13,6 +13,8 @@ import {
   CheckCircle, 
   Clock, 
   Zap,
+  Download,
+  CreditCard,
   Users,
   FileText,
   MessageSquare,

@@ -314,8 +314,8 @@ export const DetailedSubscriptionStatus: React.FC = () => {
   const getPlanInfo = () => {
     if (subscriptionStatus.subscription) {
       return {
-        name: subscriptionStatus.subscription.plan === 'MONTHLY' ? 'Monthly Plan' : 'Yearly Plan',
-        price: subscriptionStatus.subscription.plan === 'MONTHLY' ? '₹99/month' : '₹999/year',
+        name: subscriptionStatus.subscription.planName?.includes('Monthly') ? 'Monthly Plan' : 'Yearly Plan',
+        price: subscriptionStatus.subscription.displayPrice,
         nextBilling: subscriptionStatus.subscription.endDate ? 
           new Date(subscriptionStatus.subscription.endDate).toLocaleDateString() : null
       };

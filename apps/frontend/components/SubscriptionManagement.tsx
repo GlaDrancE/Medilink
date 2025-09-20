@@ -110,7 +110,7 @@ export const SubscriptionManagement: React.FC = () => {
 
   const handleCancelSubscription = async () => {
     try {
-      const result = await subscriptionApi.cancelSubscription();
+      const result = await subscriptionApi.cancel();
       if (result.success) {
         alert('Subscription cancelled successfully');
         await refreshSubscriptionStatus();
@@ -192,7 +192,7 @@ export const SubscriptionManagement: React.FC = () => {
                   </Badge>
                   {subscriptionStatus.subscription && (
                     <span className="text-sm text-gray-600">
-                      {subscriptionStatus.subscription.plan === 'MONTHLY' ? 'Monthly Plan' : 'Yearly Plan'}
+                      {subscriptionStatus.subscription.planName}
                     </span>
                   )}
                 </div>
@@ -202,7 +202,7 @@ export const SubscriptionManagement: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Plan:</span>
                       <span className="font-medium">
-                        {subscriptionStatus.subscription.plan === 'MONTHLY' ? '₹99/month' : '₹999/year'}
+                        {subscriptionStatus.subscription.displayPrice}
                       </span>
                     </div>
                     <div className="flex justify-between">

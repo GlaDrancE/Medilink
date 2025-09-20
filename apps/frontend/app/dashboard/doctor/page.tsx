@@ -227,8 +227,7 @@ export default function DoctorDashboard() {
   }
 
   return (
-    <SubscriptionProvider>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -655,7 +654,6 @@ export default function DoctorDashboard() {
         </main>
 
 
-      </div>
-    </SubscriptionProvider>
+    </div>
   );
 }

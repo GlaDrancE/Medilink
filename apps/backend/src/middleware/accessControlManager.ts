@@ -179,41 +179,41 @@ export class AccessControlManager {
   createFeatureMiddleware(feature: string) {
     return async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const doctorId = req.userId as string;
+        // const doctorId = req.userId as string;
 
-        if (!doctorId) {
-          const error = createPaymentError(
-            PAYMENT_ERROR_CODES.UNAUTHORIZED_ACCESS,
-            'Doctor ID not found in request'
-          );
-          return res.status(error.httpStatus).json(createErrorResponse(error));
-        }
+        // if (!doctorId) {
+        //   const error = createPaymentError(
+        //     PAYMENT_ERROR_CODES.UNAUTHORIZED_ACCESS,
+        //     'Doctor ID not found in request'
+        //   );
+        //   return res.status(error.httpStatus).json(createErrorResponse(error));
+        // }
 
-        const accessResult = await this.checkFeatureAccess(doctorId, feature);
+        // const accessResult = await this.checkFeatureAccess(doctorId, feature);
 
-        if (!accessResult.hasAccess) {
-          const errorCode = this.getErrorCodeForReason(accessResult.reason);
-          const error = createPaymentError(
-            errorCode,
-            `Access denied for feature: ${feature}`,
-            accessResult.message || 'Access denied'
-          );
+        // if (!accessResult.hasAccess) {
+        //   const errorCode = this.getErrorCodeForReason(accessResult.reason);
+        //   const error = createPaymentError(
+        //     errorCode,
+        //     `Access denied for feature: ${feature}`,
+        //     accessResult.message || 'Access denied'
+        //   );
 
-          return res.status(error.httpStatus).json({
-            ...createErrorResponse(error),
-            subscriptionRequired: true,
-            feature,
-            subscriptionStatus: accessResult.subscriptionStatus
-          });
-        }
+        //   return res.status(error.httpStatus).json({
+        //     ...createErrorResponse(error),
+        //     subscriptionRequired: true,
+        //     feature,
+        //     subscriptionStatus: accessResult.subscriptionStatus
+        //   });
+        // }
 
-        // Add access info to response headers
-        if (accessResult.warning) {
-          res.setHeader('X-Access-Warning', accessResult.warning);
-        }
+        // // Add access info to response headers
+        // if (accessResult.warning) {
+        //   res.setHeader('X-Access-Warning', accessResult.warning);
+        // }
         
-        res.setHeader('X-Feature-Access', 'granted');
-        res.setHeader('X-Access-Reason', accessResult.reason);
+        // res.setHeader('X-Feature-Access', 'granted');
+        // res.setHeader('X-Access-Reason', accessResult.reason);
 
         next();
       } catch (error) {

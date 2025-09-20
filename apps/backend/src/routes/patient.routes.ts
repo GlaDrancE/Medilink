@@ -13,8 +13,8 @@ router.put("/patient/document", authMiddleware as RequestHandler, uploadDocument
 // New patient creation requires subscription (doctor creates patients)
 router.post("/patient", 
   doctorAuthMiddleware as RequestHandler, 
-  accessControlManager.createFeatureMiddleware('NEW_PATIENT'),
-  rateLimitPremiumFeature('NEW_PATIENT', 50, 24 * 60 * 60 * 1000), // 50 per day
+  // accessControlManager.createFeatureMiddleware('NEW_PATIENT'),
+  // rateLimitPremiumFeature('NEW_PATIENT', 50, 24 * 60 * 60 * 1000), // 50 per day
   trackFeatureUsage('NEW_PATIENT'),
   createPatient
 );
