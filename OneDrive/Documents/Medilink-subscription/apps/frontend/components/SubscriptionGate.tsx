@@ -325,6 +325,9 @@ export const DetailedSubscriptionStatus: React.FC = () => {
 
   const planInfo = getPlanInfo();
 
+
+
+  
   return (
     <Card className="w-full">
       <CardContent >
