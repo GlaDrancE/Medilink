@@ -27,6 +27,9 @@ export const useDoctorProfileModal = () => {
             doctor.specialization && 
             doctor.bio; // short_bio maps to bio
 
+
+
+            
         if (!hasRequiredFields) {
             // Show modal after 2 seconds to allow page to load
             const timer = setTimeout(() => {
