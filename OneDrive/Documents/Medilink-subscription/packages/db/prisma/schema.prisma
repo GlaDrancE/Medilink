@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Doctor {
+  id                          String  @id @default(uuid())
+  primary_email_address_id    String  @unique
+  medical_registration_number String?
+  name                        String
+  username                    String?
+  email                       String? @unique
+  password                    String?
+  phone                       String?
+  address                     String?
+  consultation_fees           Int?
+  consultation_type           String?
+  qualifications              String?
+  years_of_experience         Int?
+  hospital                    String  @default("Not Specified")
+  license_number              String?
+  specialization              String?
+  experience                  Int?
+  bio                         String?
+  profile_picture             String?
+  is_active                   Boolean @default(true)
+  is_verified                 Boolean @default(false)
+  is_approved                 Boolean @default(false)
+  is_rejected                 Boolean @default(false)
+
+  // Subscription fields
+  subscription_status  SubscriptionStatus @default(INACTIVE)
+  subscription_plan    SubscriptionPlan?
+  subscription_start   DateTime?
+  subscription_end     DateTime?
+  razorpay_customer_id String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  Patients             Patient[]
+  Prescriptions        Prescriptions[]
+  subscriptions        Subscription[]
+  payment_transactions PaymentTransaction[]
+}
+
+model Patient {
+  id              String     @id @default(uuid())
+  doctor_id       String?
+  name            String?
+  email           String?
+  password        String?
+  phone           String
+  address         String?
+  gender          String?
+  age             Int?
+  weight          Int?
+  date_of_birth   DateTime?
+  blood_group     String?
+  allergies       String[]
+  medical_history String[]
+  is_active       Boolean    @default(true)
+  doctor          Doctor?    @relation(fields: [doctor_id], references: [id])
+  document_id     String?
+  documents       Document[]
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  prescriptions Prescriptions[]
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  patient_id String
+  file_url   String
+  type       String
+  name       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  patient    Patient  @relation(fields: [patient_id], references: [id])
+}
+
+model Prescriptions {
+  id                String     @id @default(uuid())
+  index             Int        @default(0)
+  patient_id        String
+  doctor_id         String
+  prescription_date DateTime   @default(now())
+  prescription_text String
+  is_active         Boolean    @default(true)
+  patient           Patient    @relation(fields: [patient_id], references: [id])
+  doctor            Doctor     @relation(fields: [doctor_id], references: [id])
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  medicine_list     Medicine[]
+  checkups          Checkup[]
+}
+
+enum FoodTiming {
+  BEFORE
+  AFTER
+}
+
+model Medicine {
+  id                String        @id @default(uuid())
+  name              String
+  dosage            Json
+  time              DateTime
+  before_after_food FoodTiming
+  prescription_id   String
+  prescription      Prescriptions @relation(fields: [prescription_id], references: [id])
+}
+
+model Checkup {
+  id              String        @id @default(uuid())
+  prescription_id String
+  checkup_date    DateTime      @default(now())
+  checkup_text    String
+  is_active       Boolean       @default(true)
+  prescription    Prescriptions @relation(fields: [prescription_id], references: [id])
+}
+
+// Subscription-related enums
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  CANCELLED
+  GRACE_PERIOD
+}
+
+enum SubscriptionPlan {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+// Subscription model
+model Subscription {
+  id                       String             @id @default(uuid())
+  doctor_id                String
+  plan                     SubscriptionPlan
+  status                   SubscriptionStatus
+  start_date               DateTime
+  end_date                 DateTime
+  razorpay_subscription_id String?
+  amount                   Int
+  currency                 String             @default("INR")
+  auto_renew               Boolean            @default(true)
+  cancelled_at             DateTime?
+
+  // Relations
+  doctor               Doctor               @relation(fields: [doctor_id], references: [id])
+  payment_transactions PaymentTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([doctor_id])
+  @@index([status])
+  @@index([end_date])
+}
+
+// Payment transaction model
+model PaymentTransaction {
+  id                  String        @id @default(uuid())
+  doctor_id           String
+  subscription_id     String?
+  razorpay_payment_id String        @unique
+  razorpay_order_id   String
+  amount              Int
+  currency            String        @default("INR")
+  status              PaymentStatus
+  payment_method      String?
+  failure_reason      String?
+
+  // Relations
+  doctor       Doctor        @relation(fields: [doctor_id], references: [id])
+  subscription Subscription? @relation(fields: [subscription_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([doctor_id])
+  @@index([status])
+  @@index([razorpay_payment_id])
+}

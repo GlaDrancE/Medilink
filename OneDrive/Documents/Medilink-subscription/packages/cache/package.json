@@ -1,0 +1,18 @@
+{
+  "name": "@repo/cache",
+  "module": "index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@repo/typescript-config": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "ioredis": "^5.6.1"
+  }
+}
