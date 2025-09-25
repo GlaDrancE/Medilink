@@ -28,6 +28,7 @@ import PatientPrescription from '@/components/patient/PatientPrescription';
 import PatientHeader from '@/components/patient/PatientHeader';
 import PatientFooter from '@/components/patient/PatientFooter';
 import PatientAccount from '@/components/patient/PatientAccount';
+import PatientReports from '@/components/patient/PatientReports';
 import TakePicture from '@/components/patient/TakePicture';
 
 const MedicalDashboard = () => {
@@ -81,7 +82,7 @@ const MedicalDashboard = () => {
         fetchPatient();
     }, []);
 
-    const handleCapture = async (file: File, dataUrl: string, type: string) => {
+    const handleCapture = async (file: File, dataUrl: string, type: string, name?: string) => {
         const formData = new FormData();
         formData.append('file', file)
         formData.append('upload_preset', 'medilink')
@@ -93,7 +94,8 @@ const MedicalDashboard = () => {
         if (repsonse.status === 200) {
             const response = await uploadDocument({
                 fileUrl: repsonse.data.secure_url,
-                type: type
+                type: type,
+                name: name // Include the document name
             })
             if (response.status === 200) {
                 setPatient({
@@ -113,6 +115,7 @@ const MedicalDashboard = () => {
             {/* Main Content */}
             <div className="p-4">
                 {activeTab === 'home' && <PatientHome patient={patient} />}
+                {activeTab === 'reports' && <PatientReports patient={patient} />}
                 {activeTab === 'prescriptions' && <PatientPrescription patient={patient} prescriptions={prescriptions} />}
                 {activeTab === 'upload' && <TakePicture onCapture={handleCapture} />}
                 {activeTab === 'account' && <PatientAccount patient={patient} />}

@@ -1,9 +1,23 @@
 import { Patient } from '@/types'
-import { User } from 'lucide-react'
+import { User, LogOut } from 'lucide-react'
 import React from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/auth'
+import { Button } from '@/components/ui/button'
 
 
 const PatientHeader = ({ patient }: { patient: Patient }) => {
+    const router = useRouter();
+    const { logout } = useAuth();
+
+    const handleLogout = () => {
+        const confirmed = window.confirm('Are you sure you want to logout?');
+        if (confirmed) {
+            logout();
+            router.push('/auth/patient');
+        }
+    };
+
     return (
         <>
             <div className="bg-white shadow-sm p-4 sticky top-0 z-10" >
@@ -19,6 +33,15 @@ const PatientHeader = ({ patient }: { patient: Patient }) => {
                             <span>Phone: {patient.phone}</span>
                         </div>
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                    </Button>
                 </div>
             </div>
         </>

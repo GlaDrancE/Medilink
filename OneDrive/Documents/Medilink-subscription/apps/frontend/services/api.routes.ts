@@ -127,7 +127,7 @@ export const getPatientById = async () => {
         throw error
     }
 }
-export const uploadDocument = async (data: { fileUrl: string, type: string }) => {
+export const uploadDocument = async (data: { fileUrl: string, type: string, name?: string }) => {
     try {
         const response = await api.put('/patient/document', data)
         return response.data;

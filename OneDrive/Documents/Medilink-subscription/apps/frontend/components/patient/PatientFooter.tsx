@@ -1,4 +1,4 @@
-import { Camera, Home, Pill, Plus, Upload, UserCircle, X } from 'lucide-react'
+import { Camera, Home, Pill, Plus, Upload, UserCircle, X, FileText } from 'lucide-react'
 import React from 'react'
 import { Button } from '../ui/button'
 import gsap from 'gsap'
@@ -71,6 +71,16 @@ const PatientFooter = ({ activeTab, setActiveTab }: { activeTab: string, setActi
                     </div>
                 </Button>
 
+                <Button
+                    variant={activeTab === 'reports' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveTab('reports')}
+                    className="flex-1 mx-1"
+                >
+                    <div className="flex flex-col items-center">
+                        <FileText className="w-6 h-6 mb-1" />
+                    </div>
+                </Button>
 
                 <Button
                     variant={activeTab === 'upload' ? 'default' : 'ghost'}

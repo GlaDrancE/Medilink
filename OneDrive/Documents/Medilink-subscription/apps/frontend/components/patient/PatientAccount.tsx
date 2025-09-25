@@ -1,13 +1,17 @@
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { User } from "lucide-react";
+import { User, LogOut, AlertTriangle } from "lucide-react";
 import { Label } from "../ui/label";
 import Input from "../ui/input";
 import { Save, Edit3 } from "lucide-react";
 import { useState } from "react";
 import { Patient } from "@/types";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth";
 
 const PatientAccount = ({ patient }: { patient: Patient }) => {
+    const router = useRouter();
+    const { logout } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [userDetails, setUserDetails] = useState({
         name: patient.name || '-',
@@ -17,6 +21,14 @@ const PatientAccount = ({ patient }: { patient: Patient }) => {
         phone: patient.phone || '-',
         email: patient.email || '-',
     });
+
+    const handleLogout = () => {
+        const confirmed = window.confirm('Are you sure you want to logout from your patient account?');
+        if (confirmed) {
+            logout();
+            router.push('/auth/patient');
+        }
+    };
 
 
     const handleSaveProfile = () => {
@@ -135,6 +147,32 @@ const PatientAccount = ({ patient }: { patient: Patient }) => {
                                 disabled={!isEditing}
                                 className="mt-1"
                             />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Security Section */}
+            <Card>
+                <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Security</h3>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+                            <div className="flex items-center space-x-3">
+                                <AlertTriangle className="w-5 h-5 text-red-600" />
+                                <div>
+                                    <p className="font-medium text-red-800">Logout from Account</p>
+                                    <p className="text-sm text-red-600">Sign out of your patient account</p>
+                                </div>
+                            </div>
+                            <Button
+                                variant="destructive"
+                                onClick={handleLogout}
+                                className="bg-red-600 hover:bg-red-700"
+                            >
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Logout
+                            </Button>
                         </div>
                     </div>
                 </CardContent>

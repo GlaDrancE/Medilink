@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Modal from './ui/Modal';
-import Input from './ui/Input';
-import Select from './ui/Select';
-import { Textarea } from './ui/Textarea';
+import Modal from './ui/modal';
+import Input from './ui/input';
+import Select from './ui/select';
+import { Textarea } from './ui/textarea';
 import { Button } from '@/components/ui/button';
 import AutocompleteInput from './ui/AutocompleteInput';
-import Calendar from './ui/Calendar';
+import Calendar from './ui/calendar';
 import type { Document as PatientDocument, MedicineEntry, Patient, Prescriptions } from '@/types';
 import { createPatient, searchPatientByPhone } from '@/services/api.routes';
 import { validatePhoneNumber, formatPhoneNumber } from '@/lib/validation';
@@ -161,15 +161,9 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             if (!patient?.id) return;
             setHistoryLoading(true);
             try {
-                // TODO: Replace with real API call (doctor-facing) to fetch patient history by id
-                // For now, keep placeholders so UI is scannable even without data
-                // setPatientHistory(prev => ({
-                //     ...prev,
-                //     prescriptions: [],
-                //     labTests: [],
-                //     diagnoses: [],
-                //     visits: [],
-                // }));
+                // Categorize documents from backend data
+                const categorizedHistory = categorizePatientData(patient);
+                setPatientHistory(categorizedHistory);
             } catch (e) {
                 // noop
             } finally {
@@ -232,6 +226,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                 try {
                     const patient = await searchPatientByPhone(phoneNumber);
                     setFoundPatient(patient);
+                    console.log(patient)
                     setShowAddNewOption(true);
                 } catch (error: any) {
                     if (error.response?.status === 404) {
@@ -259,21 +254,92 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         };
     }, [phoneNumber]);
 
-    useEffect(() => {
-        if (patient) {
-            patient.prescriptions?.forEach(prescription => {
-                patient.documents?.forEach(doc => {
-                    if (new Date(prescription.createdAt) <= new Date(doc.createdAt)) {
-                        setPatientHistory(prev => ({ ...prev, prescriptions: [...prev.prescriptions as any, prescription] }))
-                    }
-                })
-            })
+    // Function to categorize patient data into history format
+    const categorizePatientData = (patientData: any) => {
+        const categorized = {
+            labTests: [] as Array<{ id: string; name: string; date: string; summary?: string; pdfUrl?: string }>,
+            prescriptions: [] as Array<Prescriptions | PatientDocument>,
+            diagnoses: [] as Array<{ id: string; name: string; severity?: 'low' | 'medium' | 'high' }>,
+            visits: [] as Array<{ id: string; date: string; location?: string; note?: string }>
+        };
+
+        if (patientData.documents) {
+            patientData.documents.forEach((doc: any) => {
+                switch (doc.type) {
+                    case 'lab_test':
+                    case 'test':
+                        categorized.labTests.push({
+                            id: doc.id,
+                            name: doc.name || 'Lab Test',
+                            date: doc.createdAt,
+                            pdfUrl: doc.file_url
+                        });
+                        break;
+                    case 'prescription':
+                        categorized.prescriptions.push({
+                            id: doc.id,
+                            file_url: doc.file_url,
+                            type: doc.type,
+                            name: doc.name,
+                            createdAt: doc.createdAt,
+                            updatedAt: doc.updatedAt
+                        } as PatientDocument);
+                        break;
+                    case 'diagnosis':
+                        categorized.diagnoses.push({
+                            id: doc.id,
+                            name: doc.name || 'Diagnosis Document',
+                            severity: 'medium' // Default severity, can be determined from document content
+                        });
+                        break;
+                    case 'visit':
+                    case 'visit_note':
+                        categorized.visits.push({
+                            id: doc.id,
+                            date: doc.createdAt,
+                            note: doc.name || 'Visit record'
+                        });
+                        break;
+                    default:
+                        // For unknown types, categorize as diagnoses
+                        categorized.diagnoses.push({
+                            id: doc.id,
+                            name: doc.name || `${doc.type} Document`,
+                            severity: 'low'
+                        });
+                        break;
+                }
+            });
         }
-    }, [patient]);
+
+        // Add prescription data from prescriptions array
+        if (patientData.prescriptions) {
+            patientData.prescriptions.forEach((prescription: any) => {
+                categorized.prescriptions.push(prescription as Prescriptions);
+                
+                // Add visit record for each prescription
+                categorized.visits.push({
+                    id: prescription.id + '_visit',
+                    date: prescription.prescription_date,
+                    location: prescription.doctor?.hospital,
+                    note: `Prescription by Dr. ${prescription.doctor?.name} (${prescription.doctor?.specialization})`
+                });
+            });
+        }
+
+        return categorized;
+    };
 
     useEffect(() => {
-        console.log("patientHistory", patientHistory)
-    }, [patientHistory])
+        if (patient) {
+            console.log('Patient data:', patient);
+            // Immediately categorize data when patient is set
+            const categorizedHistory = categorizePatientData(patient);
+            setPatientHistory(categorizedHistory);
+        }
+    }, [patient])
+
+
 
     const validateForm = (): boolean => {
         const newErrors: Partial<PatientData> = {};
@@ -570,6 +636,8 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         setCurrentStep('phone');
         setErrors({});
     };
+    
+    console.log(patientHistory.prescriptions.length)
 
     return (
         <Modal
@@ -807,6 +875,14 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                         className='w-full'
                                                     />
 
+                                                    <Input
+                                                        placeholder="Quantity"
+                                                        value={medicineInput.quantity || ''}
+                                                        onChange={e => setMedicineInput(m => ({ ...m, quantity: e.target.value }))}
+                                                        disabled={loading}
+                                                        className='w-24'
+                                                    />
+
                                                     {/* Compact Dosage Selector */}
                                                     <div className="flex gap-1">
                                                         {timeKeys.map((time) => (
@@ -886,6 +962,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                         <TableHeader>
                                                             <TableRow>
                                                                 <TableHead className="text-xs font-semibold">Name</TableHead>
+                                                                <TableHead className="text-xs font-semibold">Quantity</TableHead>
                                                                 <TableHead className="text-xs font-semibold">Dosage</TableHead>
                                                                 <TableHead className="text-xs font-semibold">Food</TableHead>
                                                                 <TableHead className="text-xs font-semibold">Notes</TableHead>
@@ -897,6 +974,9 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                                 <TableRow key={idx}>
                                                                     <TableCell className="text-xs font-bold text-gray-900">
                                                                         {med.name}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-xs text-gray-900">
+                                                                        {med.quantity || '-'}
                                                                     </TableCell>
                                                                     <TableCell className="text-xs flex gap-2">
                                                                         {timeKeys.map((t) => (
@@ -1161,6 +1241,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                 .map((prescription, index) => (
 
 
+
                                                     <div key={index} className="border rounded-md">
                                                         <button
                                                             type="button"
@@ -1260,6 +1341,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                         {expandedSections.diagnoses ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
                                     </button>
                                     {expandedSections.diagnoses && (
+                                        
                                         <div className="px-4 pb-3 space-y-2">
                                             {patientHistory.diagnoses.length === 0 && (
                                                 <div className="text-sm text-gray-500">No diagnoses.</div>

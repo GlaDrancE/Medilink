@@ -144,6 +144,7 @@ export const uploadDocument = async (req: Request, res: Response) => {
     const patientId = req.userId
     const fileUrl = req.body.fileUrl;
     const type = req.body.type;
+    const name = req.body.name;
     try {
         const document = await prisma.$transaction(async (tx) => {
             const patient = await tx.patient.findFirst({ where: { id: patientId } })
@@ -154,6 +155,7 @@ export const uploadDocument = async (req: Request, res: Response) => {
                     patient_id: patientId,
                     file_url: fileUrl,
                     type: type,
+                    name: name,
                 }
             })
             await tx.patient.update({
@@ -162,6 +164,7 @@ export const uploadDocument = async (req: Request, res: Response) => {
                     document_id: newDocument.id,
                 }
             })
+            return newDocument;
         })
         console.log(document)
         res.status(200).json(document);

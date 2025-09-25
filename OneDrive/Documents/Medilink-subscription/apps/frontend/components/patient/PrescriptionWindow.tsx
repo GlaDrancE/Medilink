@@ -45,19 +45,19 @@ export const PrescriptionWindow = ({ prescription, isRecent = false }: { prescri
                                         <div className="text-center">
                                             <div className="text-xs text-gray-500 mb-1">Morning</div>
                                             <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium min-h-[28px] flex items-center justify-center">
-                                                {medicine.dosage.morning || '-'}
+                                                {medicine.dosage.morning == '0.5' ? '1/2' : medicine.dosage.morning || '-'}
                                             </div>
                                         </div>
                                         <div className="text-center">
                                             <div className="text-xs text-gray-500 mb-1">Afternoon</div>
                                             <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium min-h-[28px] flex items-center justify-center">
-                                                {medicine.dosage.afternoon || '-'}
+                                                {medicine.dosage.afternoon == '0.5' ? '1/2' : medicine.dosage.afternoon || '-'}
                                             </div>
                                         </div>
                                         <div className="text-center">
                                             <div className="text-xs text-gray-500 mb-1">Night</div>
                                             <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium min-h-[28px] flex items-center justify-center">
-                                                {medicine.dosage.night || '-'}
+                                                {medicine.dosage.night == '0.5' ? '1/2' : medicine.dosage.night || '-'}
                                             </div>
                                         </div>
                                     </div>

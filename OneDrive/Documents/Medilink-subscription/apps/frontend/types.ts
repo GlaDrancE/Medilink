@@ -83,6 +83,7 @@ export interface MedicineEntry {
     notes?: string
     before_after_food: string
     prescription_id: string
+    quantity?: string // Add quantity field
 }
 
 export interface Checkup {
