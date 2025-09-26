@@ -1,0 +1,33 @@
+{
+  "name": "medilink-backend",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types",
+    "db:generate": "cd packages/db && bunx prisma generate",
+    "db:migrate": "cd packages/db && bunx prisma migrate dev"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.0",
+    "turbo": "^2.5.4",
+    "typescript": "5.8.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "bun@1.2.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "@clerk/nextjs": "^6.32.2",
+    "@prisma/client": "^6.16.1",
+    "jsonwebtoken": "^9.0.2",
+    "minimatch": "^10.0.3",
+    "twilio": "^5.7.2"
+  }
+}
