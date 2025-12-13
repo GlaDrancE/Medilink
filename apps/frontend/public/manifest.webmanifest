@@ -1,0 +1,19 @@
+{
+    "start_url": "/dashboard/patient",
+    "name": "MediLink",
+    "short_name": "MediLink",
+    "description": "MediLink is a platform for managing your medical records and prescriptions",
+    "icons": [
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#000000",
+    "background_color": "#000000",
+    "display": "standalone",
+    "orientation": "portrait",
+    "scope": "/",
+    "lang": "en-US"
+}

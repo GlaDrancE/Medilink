@@ -1,15 +1,16 @@
 import { RequestHandler, Router } from "express";
-import { getDoctorById, getAllDoctors, updateDoctor, deleteDoctor, doctorWebhook } from "../controller/doctor.controller";
+import * as DoctorController from "../controller/doctor.controller";
 import { authMiddleware } from "../middleware/authMiddleware";
 
 const router: Router = Router();
 
-router.get("/doctor", authMiddleware as RequestHandler, getDoctorById)
-router.get("/doctor/all", authMiddleware as RequestHandler, getAllDoctors)
-router.put("/doctor/:id", authMiddleware as RequestHandler, updateDoctor)
-router.delete("/doctor", authMiddleware as RequestHandler, deleteDoctor)
+router.get("/doctor", authMiddleware as RequestHandler, DoctorController.getDoctorById)
+router.get("/doctor/all", authMiddleware as RequestHandler, DoctorController.getAllDoctors)
+router.put("/doctor/:id", authMiddleware as RequestHandler, DoctorController.updateDoctor)
+router.delete("/doctor", authMiddleware as RequestHandler, DoctorController.deleteDoctor)
+router.get("/doctor/recent", authMiddleware as RequestHandler, DoctorController.getRecentPatients)
 
-router.post("/webhook/clerk", doctorWebhook)
+router.post("/webhook/clerk", DoctorController.doctorWebhook)
 
 
 export default router;

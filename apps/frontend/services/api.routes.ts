@@ -2,7 +2,7 @@ import { Doctor, Patient, Prescriptions } from "@/types";
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://localhost:3002/api/v1",
+    baseURL: "http://localhost:3000/api/v1",
 })
 api.interceptors.request.use(async (config) => {
     const token = localStorage.getItem("token");
@@ -108,7 +108,14 @@ export const addPrescription = async (data: Prescriptions) => {
         throw error
     }
 }
-
+export const getRecentPatients = async () => {
+    try {
+        const response = await api.get(`/doctor/recent`)
+        return response.data;
+    } catch (error) {
+        throw error
+    }
+}
 export const updateDoctorProfile = async (data: any) => {
     try {
         const response = await api.put(`/doctor/${data.id}`, data)
@@ -152,3 +159,4 @@ export const uploadFile = async (formData: FormData) => {
         throw error
     }
 }
+

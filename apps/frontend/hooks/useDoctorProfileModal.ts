@@ -17,6 +17,7 @@ export const useDoctorProfileModal = () => {
         const isDoctor = user.publicMetadata?.role === "doctor";
         const profileCompleted = localStorage.getItem("doctorProfileCompleted") === "true";
 
+        console.log(doctor)
         if (!doctor?.hospital) {
             console.log(doctor)
             // Show modal after 3 seconds

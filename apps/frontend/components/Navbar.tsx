@@ -27,6 +27,7 @@ const Navbar = (props: Props) => {
     }, []);
 
 
+
     return (
         <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled
             ? 'backdrop-blur-md bg-white/10 dark:bg-white/10 light:bg-white/80 border-b border-white/20 dark:border-white/20 light:border-gray-200/50'

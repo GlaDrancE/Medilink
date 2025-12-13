@@ -8,13 +8,22 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "files": [
+    "src/generated",
+    "src/index.ts",
+    "prisma",
+    "dist"
+  ],
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "prisma": "7"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@prisma/client": "^6.11.1"
+    "@prisma/adapter-pg": "^7.0.1",
+    "@prisma/client": "7",
+    "dotenv": "^17.2.3"
   }
 }

@@ -65,4 +65,4 @@ export const sendEmail = async (to: string, subject: string, text: string) => {
         throw error;
     }
 }
-sendEmail('ayushr16060@gmail.com', '!Thanks for visiting', 'Hello');
+// sendEmail('ayushr16060@gmail.com', '!Thanks for visiting', 'Hello');

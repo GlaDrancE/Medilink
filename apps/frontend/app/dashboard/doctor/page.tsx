@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import AddPatientModal from '@/components/AddPatientModal';
 import { RedirectToSignIn, useAuth } from '@clerk/nextjs';
 import { useUser } from '@clerk/nextjs';
-import { addPrescription } from '@/services/api.routes';
+import { addPrescription, getRecentPatients } from '@/services/api.routes';
 import { Prescriptions } from '@/types';
 
 export default function DoctorDashboard() {
@@ -56,6 +56,10 @@ export default function DoctorDashboard() {
         updatedAt: new Date(),
     });
     const [formLoading, setFormLoading] = useState(false);
+    const [todaysAppointments, setTodaysAppointments] = useState<{ time: string; patient: string; status: AppointmentStatus }[]>([]);
+    const [upcomingFollowUps, setUpcomingFollowUps] = useState<{ name: string; date: string; reason: string }[]>([]);
+    const [missedAppointments, setMissedAppointments] = useState<{ name: string; date: string }[]>([]);
+    const [recentPatients, setRecentPatients] = useState<{ name: string; lastPrescription: string; next?: string }[]>([]);
 
     // Connectivity / Sync Status
     type Connectivity = 'online' | 'offline' | 'syncing';
@@ -155,29 +159,14 @@ export default function DoctorDashboard() {
 
     // Mock data for UI (replace with real API data later)
     type AppointmentStatus = 'Scheduled' | 'Checked-in' | 'Waiting';
-    const todaysAppointments: { time: string; patient: string; status: AppointmentStatus }[] = [
-        { time: '09:00', patient: 'John Doe', status: 'Checked-in' },
-        { time: '10:30', patient: 'Sarah Wilson', status: 'Scheduled' },
-        { time: '11:15', patient: 'Mike Johnson', status: 'Waiting' },
-        { time: '14:00', patient: 'Anna Lee', status: 'Scheduled' },
-    ];
 
-    const upcomingFollowUps: { name: string; date: string; reason: string }[] = [
-        { name: 'Peter Parker', date: 'Tomorrow 10:00', reason: 'Bloodwork review' },
-        { name: 'Bruce Wayne', date: 'Thu 14:30', reason: 'Post-op check' },
-    ];
-
-    const missedAppointments: { name: string; date: string }[] = [
-        { name: 'Clark Kent', date: 'Today 12:00' },
-        { name: 'Diana Prince', date: 'Mon 16:00' },
-    ];
-
-    const recentPatients: { name: string; lastPrescription: string; next?: string }[] = [
-        { name: 'Tony Stark', lastPrescription: 'Atorvastatin 10mg nightly', next: 'Fri 11:00' },
-        { name: 'Natasha Romanoff', lastPrescription: 'Ibuprofen PRN', next: undefined },
-        { name: 'Steve Rogers', lastPrescription: 'Vitamin D 1000 IU daily', next: 'Next week' },
-    ];
-
+    const fetchRecentPatients = async () => {
+        const response = await getRecentPatients();
+        console.log(response)
+    }
+    useEffect(() => {
+        fetchRecentPatients();
+    }, []);
     if (!isLoaded) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -234,25 +223,31 @@ export default function DoctorDashboard() {
                             <span className="text-sm text-gray-500">{todaysAppointments.length} total</span>
                         </div>
                         <div className="divide-y">
-                            {todaysAppointments.map((a, idx) => (
-                                <div key={idx} className="py-3 flex items-center justify-between">
-                                    <div className="flex items-center space-x-4">
-                                        <span className="text-sm font-medium text-gray-900 w-16">{a.time}</span>
-                                        <span className="text-sm text-gray-700">{a.patient}</span>
-                                    </div>
-                                    <span
-                                        className={
-                                            a.status === 'Checked-in'
-                                                ? 'px-2 py-0.5 text-xs rounded bg-green-100 text-green-700'
-                                                : a.status === 'Waiting'
-                                                    ? 'px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700'
-                                                    : 'px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700'
-                                        }
-                                    >
-                                        {a.status}
-                                    </span>
+                            {todaysAppointments.length === 0 ? (
+                                <div className="py-8 text-center">
+                                    <p className="text-sm text-gray-500">No appointments scheduled for today</p>
                                 </div>
-                            ))}
+                            ) : (
+                                todaysAppointments.map((a, idx) => (
+                                    <div key={idx} className="py-3 flex items-center justify-between">
+                                        <div className="flex items-center space-x-4">
+                                            <span className="text-sm font-medium text-gray-900 w-16">{a.time}</span>
+                                            <span className="text-sm text-gray-700">{a.patient}</span>
+                                        </div>
+                                        <span
+                                            className={
+                                                a.status === 'Checked-in'
+                                                    ? 'px-2 py-0.5 text-xs rounded bg-green-100 text-green-700'
+                                                    : a.status === 'Waiting'
+                                                        ? 'px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700'
+                                                        : 'px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700'
+                                            }
+                                        >
+                                            {a.status}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </section>
 
@@ -276,15 +271,21 @@ export default function DoctorDashboard() {
                     <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-2">
                         <h3 className="text-base font-semibold text-gray-900 mb-3">Upcoming Follow-Ups</h3>
                         <div className="divide-y">
-                            {upcomingFollowUps.map((u, idx) => (
-                                <div key={idx} className="py-3 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">{u.name}</p>
-                                        <p className="text-xs text-gray-600">{u.reason}</p>
-                                    </div>
-                                    <span className="text-sm text-gray-700">{u.date}</span>
+                            {upcomingFollowUps.length === 0 ? (
+                                <div className="py-8 text-center">
+                                    <p className="text-sm text-gray-500">No upcoming follow-ups scheduled</p>
                                 </div>
-                            ))}
+                            ) : (
+                                upcomingFollowUps.map((u, idx) => (
+                                    <div key={idx} className="py-3 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">{u.name}</p>
+                                            <p className="text-xs text-gray-600">{u.reason}</p>
+                                        </div>
+                                        <span className="text-sm text-gray-700">{u.date}</span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </section>
 
@@ -295,12 +296,18 @@ export default function DoctorDashboard() {
                             <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">{missedAppointments.length} this week</span>
                         </div>
                         <div className="space-y-2">
-                            {missedAppointments.map((m, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-2 rounded border bg-red-50">
-                                    <span className="text-sm text-red-800">{m.name}</span>
-                                    <span className="text-xs text-red-700">{m.date}</span>
+                            {missedAppointments.length === 0 ? (
+                                <div className="py-8 text-center">
+                                    <p className="text-sm text-gray-500">No missed appointments this week</p>
                                 </div>
-                            ))}
+                            ) : (
+                                missedAppointments.map((m, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-2 rounded border bg-red-50">
+                                        <span className="text-sm text-red-800">{m.name}</span>
+                                        <span className="text-xs text-red-700">{m.date}</span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </section>
 
@@ -308,15 +315,21 @@ export default function DoctorDashboard() {
                     <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-3">
                         <h3 className="text-base font-semibold text-gray-900 mb-3">Recent Patients</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {recentPatients.map((p, idx) => (
-                                <div key={idx} className="border rounded p-3">
-                                    <p className="text-sm font-medium text-gray-900">{p.name}</p>
-                                    <p className="text-xs text-gray-600 mt-1">{p.lastPrescription}</p>
-                                    {p.next && (
-                                        <p className="text-xs text-gray-700 mt-2">Next: {p.next}</p>
-                                    )}
+                            {recentPatients.length === 0 ? (
+                                <div className="col-span-full py-8 text-center">
+                                    <p className="text-sm text-gray-500">No recent patients</p>
                                 </div>
-                            ))}
+                            ) : (
+                                recentPatients.map((p, idx) => (
+                                    <div key={idx} className="border rounded p-3">
+                                        <p className="text-sm font-medium text-gray-900">{p.name}</p>
+                                        <p className="text-xs text-gray-600 mt-1">{p.lastPrescription}</p>
+                                        {p.next && (
+                                            <p className="text-xs text-gray-700 mt-2">Next: {p.next}</p>
+                                        )}
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </section>
                 </div>

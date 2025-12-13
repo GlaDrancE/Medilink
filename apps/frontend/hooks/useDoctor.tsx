@@ -7,8 +7,8 @@ export const useDoctor = () => {
     useEffect(() => {
         (async () => {
             try {
-                console.log("calling use doctor")
                 const response = await getDoctorById();
+                console.log(response)
                 setDoctor(response.data)
             } catch (error) {
                 console.error(error)

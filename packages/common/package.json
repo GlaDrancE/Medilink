@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@types/nodemailer": "^6.4.17",
+    "axios": "^1.13.2",
+    "dotenv": "^17.2.3",
     "nodemailer": "^7.0.5"
   }
 }

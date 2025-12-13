@@ -1,6 +1,9 @@
 import dotenv from "dotenv";
 import path from 'path'
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
+
+console.log(process.env.JWT_SECRET)
 
 export const config = {
     port: process.env.PORT || 3000,
@@ -9,13 +12,13 @@ export const config = {
     },
     jwt: {
         secret: process.env.JWT_SECRET || `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvRWJwsim/No1GUGjMNC2
-2OKvPk3YfibuBl6RIWaBkTwMuJ5aB6hrKBdjdS8Uzf5StOLZO3gO6Suq/mEQuUBd
-v35NmlmwN3TtfBkrp36W3Skk9Y/7TPQWHZ/t75NXxFl+ZEWL0idsn+I55UhgitJH
-ioysnBppKEmtNexrK0keC95JgZA+nAjVjloNUL3JcwL9shbyi+qhe0hfGcSP8eg9
-7Esy9PA9e0cgMde1wqaprgvR/R23mPwXQbJc6YnAcSEGDIIGpkW5cf6V3H0e1p4A
-UtvTAOYAIK+1KtYj5+xjGvhHtSR8ZLK3zHomzbl3LgcKTPqcH/Ds7F9IfJs4ZfkY
-OQIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Y3P652bje91yxYTzg4g
+sLzFmsZCrfnPBYcb/MFh9GswqtNMadIdbvtzJuNibYiyC5MizlIFCxBvbDfNE8oE
+otxAeJF2r3HLPT9nMAFkJcEASUte8RzlsqLX2jieb7uKohGvXaI3QRxQuLb2wtUx
+OBwJIFF8PYxIXO7Mxt/SkxkdxmMjMW67qaljR1U/hLDp5Oc6vAbz4uj+D30jkw76
+QABs8Zp/fosd+2yoJfA3+S+SKnX4QSiot6/NUmNTnI7qqhrhFGDR84CZqgwfKqT4
+moiJt/YJKnUJ1htz0xT/shYwzlP5Bz1pN66X19v++0zTc5DUlfYzrElpHgsishqN
+EwIDAQAB
 -----END PUBLIC KEY-----
 `,
     },

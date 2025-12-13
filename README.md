@@ -1,135 +1,203 @@
-# Turborepo starter
+# Medilink
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern healthcare platform that bridges doctors and patients with secure digital prescriptions, seamless document management, and instant access to medical records. Medilink revolutionizes healthcare communication by providing a centralized platform for prescription management, patient records, and medical document storage.
 
-## Using this example
+## 🏥 Overview
 
-Run the following command:
+Medilink is a full-stack healthcare management system designed to streamline the interaction between healthcare providers and patients. The platform enables doctors to create and manage digital prescriptions, while patients can access their medical records, prescriptions, and documents in real-time through a user-friendly interface.
 
-```sh
-npx create-turbo@latest
-```
+### Key Features
 
-## What's inside?
+- **Digital Prescriptions**: Doctors can create, manage, and share digital prescriptions securely
+- **Patient Management**: Comprehensive patient profiles with medical history, allergies, and documents
+- **Document Storage**: Secure, encrypted storage for medical documents and files
+- **Real-time Access**: Patients can access their prescriptions and medical records instantly
+- **Mobile-Friendly**: Progressive Web App (PWA) support for mobile devices
+- **Authentication & Security**: JWT-based authentication with role-based access control
+- **OTP Verification**: Secure OTP-based verification for user authentication
 
-This Turborepo includes the following packages/apps:
+## 🏗️ Project Structure
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+This is a **monorepo** built with Turborepo, organized into applications and shared packages:
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+Medilink/
+├── apps/
+│   ├── frontend/          # Next.js frontend application
+│   │   ├── app/            # Next.js App Router pages
+│   │   │   ├── auth/       # Authentication pages (sign-in, sign-up)
+│   │   │   ├── dashboard/  # Dashboard pages (doctor, patient)
+│   │   │   └── page.tsx    # Landing page
+│   │   ├── components/     # React components
+│   │   │   ├── patient/    # Patient-specific components
+│   │   │   └── ui/         # Reusable UI components
+│   │   ├── context/        # React context providers
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── lib/            # Utility functions and validation
+│   │   ├── services/       # API service layer
+│   │   └── public/         # Static assets and PWA files
+│   │
+│   └── backend/            # Express.js backend API
+│       └── src/
+│           ├── controller/ # Route controllers
+│           ├── middleware/ # Express middleware (auth, validation)
+│           ├── routes/     # API route definitions
+│           └── utils/      # Utility functions (JWT, OTP)
+│
+└── packages/               # Shared packages
+    ├── db/                 # Prisma database package
+    │   ├── prisma/         # Prisma schema and migrations
+    │   └── src/            # Database client and seed scripts
+    ├── cache/              # Caching utilities
+    ├── common/             # Shared utilities and configuration
+    ├── queue/              # Queue management
+    ├── ui/                 # Shared UI components
+    ├── eslint-config/      # Shared ESLint configurations
+    └── typescript-config/  # Shared TypeScript configurations
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 🛠️ Technologies
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **React 19** - UI library
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS 4** - Utility-first CSS framework
+- **Radix UI** - Accessible component primitives
+- **Lucide React** - Icon library
+- **Next PWA** - Progressive Web App support
+- **Axios** - HTTP client
+- **Next Themes** - Theme management (dark/light mode)
+- **GSAP** - Animation library
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+### Backend
+- **Bun** - JavaScript runtime and package manager
+- **Express.js 5** - Web framework
+- **TypeScript** - Type-safe JavaScript
+- **Prisma** - Next-generation ORM
+- **PostgreSQL** - Relational database
+- **JWT (jsonwebtoken)** - Authentication tokens
+- **bcrypt** - Password hashing
+- **CORS** - Cross-origin resource sharing
+- **Twilio** - SMS/OTP services
 
-### Develop
+### Development Tools
+- **Turborepo** - Monorepo build system
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **TypeScript** - Type checking
 
-To develop all apps and packages, run the following command:
+### Shared Packages
+- **@repo/db** - Prisma database client and models
+- **@repo/common** - Shared utilities and configuration
+- **@repo/cache** - Caching layer
+- **@repo/queue** - Queue management
+- **@repo/ui** - Shared UI components
+- **@repo/eslint-config** - Shared ESLint rules
+- **@repo/typescript-config** - Shared TypeScript configs
 
-```
-cd my-turborepo
+## 📦 Database Schema
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+The application uses Prisma with PostgreSQL. Key models include:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+- **Doctor** - Healthcare provider profiles with credentials, specialization, and verification status
+- **Patient** - Patient profiles with medical history, allergies, and linked documents
+- **Prescriptions** - Digital prescriptions with medicine lists and checkup schedules
+- **Medicine** - Medicine details with dosage, timing, and food instructions
+- **Document** - Medical document storage with file URLs and metadata
+- **Checkup** - Follow-up checkup schedules and notes
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 🚀 Getting Started
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+### Prerequisites
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+- **Node.js** >= 18
+- **Bun** >= 1.2.2 (package manager)
+- **PostgreSQL** database
 
-### Remote Caching
+### Installation
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd Medilink
 ```
 
-## Useful Links
+2. Install dependencies:
+```bash
+bun install
+```
 
-Learn more about the power of Turborepo:
+3. Set up environment variables:
+   - Create `.env` files in `apps/backend` and `apps/frontend` as needed
+   - Configure database connection, JWT secrets, and other service credentials
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+4. Generate Prisma client:
+```bash
+bun run db:generate
+```
+
+5. Run database migrations:
+```bash
+bun run db:migrate
+```
+
+### Development
+
+Run all applications in development mode:
+```bash
+bun run dev
+```
+
+This will start:
+- Frontend: `http://localhost:3001`
+- Backend: `http://localhost:3000`
+
+### Available Scripts
+
+- `bun run dev` - Start all apps in development mode
+- `bun run build` - Build all apps and packages
+- `bun run lint` - Lint all code
+- `bun run format` - Format code with Prettier
+- `bun run check-types` - Type check all TypeScript code
+- `bun run db:generate` - Generate Prisma client
+- `bun run db:migrate` - Run database migrations
+- `bun run db:studio` - Open Prisma Studio
+
+## 📱 Application Features
+
+### For Doctors
+- Create and manage digital prescriptions
+- Patient management and profiles
+- Document upload and sharing
+- Prescription history tracking
+- Secure authentication and authorization
+
+### For Patients
+- Access prescriptions in real-time
+- View medical history and records
+- Document storage and retrieval
+- Prescription reminders and schedules
+- Mobile-friendly PWA experience
+
+## 🔒 Security
+
+- JWT-based authentication
+- Password hashing with bcrypt
+- Role-based access control (RBAC)
+- OTP verification for secure login
+- CORS protection
+- Secure document storage
+
+## 📄 License
+
+This project is private and proprietary.
+
+## 🤝 Contributing
+
+This is a private project. For contributions, please contact the project maintainers.
+
+---
+
+Built with ❤️ for modern healthcare management
+
