@@ -15,12 +15,12 @@ datasource db {
 }
 
 model Doctor {
-  id                          String          @id @default(uuid())
-  primary_email_address_id    String          @unique
+  id                          String  @id @default(uuid())
+  primary_email_address_id    String  @unique
   medical_registration_number String?
   name                        String
-  username                    String?         @unique
-  email                       String?         @unique
+  username                    String?
+  email                       String? @unique
   password                    String?
   phone                       String?
   address                     String?
@@ -28,20 +28,32 @@ model Doctor {
   consultation_type           String?
   qualifications              String?
   years_of_experience         Int?
-  hospital                    String          @default("Not Specified")
+  hospital                    String  @default("Not Specified")
   license_number              String?
   specialization              String?
   experience                  Int?
   bio                         String?
   profile_picture             String?
-  is_active                   Boolean         @default(true)
-  is_verified                 Boolean         @default(false)
-  is_approved                 Boolean         @default(false)
-  is_rejected                 Boolean         @default(false)
-  createdAt                   DateTime        @default(now())
-  updatedAt                   DateTime        @updatedAt
-  Patients                    Patient[]
-  Prescriptions               Prescriptions[]
+  is_active                   Boolean @default(true)
+  is_verified                 Boolean @default(false)
+  is_approved                 Boolean @default(false)
+  is_rejected                 Boolean @default(false)
+
+  // Subscription fields
+  subscription_status  SubscriptionStatus @default(INACTIVE)
+  subscription_plan    SubscriptionPlan?
+  subscription_start   DateTime?
+  subscription_end     DateTime?
+  razorpay_customer_id String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  Patients             Patient[]
+  Prescriptions        Prescriptions[]
+  subscriptions        Subscription[]
+  payment_transactions PaymentTransaction[]
 }
 
 model Patient {
@@ -118,4 +130,76 @@ model Checkup {
   checkup_text    String
   is_active       Boolean       @default(true)
   prescription    Prescriptions @relation(fields: [prescription_id], references: [id])
+}
+
+// Subscription-related enums
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  CANCELLED
+  GRACE_PERIOD
+}
+
+enum SubscriptionPlan {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+// Subscription model
+model Subscription {
+  id                       String             @id @default(uuid())
+  doctor_id                String
+  plan                     SubscriptionPlan
+  status                   SubscriptionStatus
+  start_date               DateTime
+  end_date                 DateTime
+  razorpay_subscription_id String?
+  amount                   Int
+  currency                 String             @default("INR")
+  auto_renew               Boolean            @default(true)
+  cancelled_at             DateTime?
+
+  // Relations
+  doctor               Doctor               @relation(fields: [doctor_id], references: [id])
+  payment_transactions PaymentTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([doctor_id])
+  @@index([status])
+  @@index([end_date])
+}
+
+// Payment transaction model
+model PaymentTransaction {
+  id                  String        @id @default(uuid())
+  doctor_id           String
+  subscription_id     String?
+  razorpay_payment_id String        @unique
+  razorpay_order_id   String
+  amount              Int
+  currency            String        @default("INR")
+  status              PaymentStatus
+  payment_method      String?
+  failure_reason      String?
+
+  // Relations
+  doctor       Doctor        @relation(fields: [doctor_id], references: [id])
+  subscription Subscription? @relation(fields: [subscription_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([doctor_id])
+  @@index([status])
+  @@index([razorpay_payment_id])
 }

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Input from '@/components/ui/Input';
+import Input from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import Modal from '@/components/ui/Modal';
-import Select from '@/components/ui/Select';
+import Modal from '@/components/ui/modal';
+import Select from '@/components/ui/select';
 import { searchPatientByPhone, createPatient, registerPatient, loginPatient } from '@/services/api.routes';
 import { Patient } from '@/types';
 
@@ -25,6 +25,7 @@ export default function PatientAuthPage() {
         name: '',
         age: '',
         weight: '',
+        height: '',
         email: '',
         gender: '',
         phone: ''
@@ -88,7 +89,7 @@ export default function PatientAuthPage() {
     };
 
     const handleCreatePatient = async () => {
-        if (!newPatient.name || !newPatient.age || !newPatient.weight || !newPatient.gender) {
+        if (!newPatient.name || !newPatient.age || !newPatient.weight || !newPatient.height || !newPatient.gender) {
             setError('Please fill in all required fields');
             return;
         }
@@ -103,6 +104,7 @@ export default function PatientAuthPage() {
                 name: newPatient.name,
                 age: Number(newPatient.age),
                 weight: Number(newPatient.weight),
+                height: Number(newPatient.height),
                 email: newPatient.email || undefined,
                 gender: newPatient.gender,
                 phone: newPatient.phone
@@ -236,6 +238,14 @@ export default function PatientAuthPage() {
                             placeholder="Weight"
                             value={newPatient.weight}
                             onChange={(e) => handleInputChange('weight', e.target.value)}
+                        />
+
+                        <Input
+                            label="Height (cm) *"
+                            type="number"
+                            placeholder="Height"
+                            value={newPatient.height}
+                            onChange={(e) => handleInputChange('height', e.target.value)}
                         />
                     </div>
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, RefreshCw, Check, Image as ImageIcon, X, RotateCw } from "lucide-react";
 import { Patient } from "@/types";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "../ui/dialog";
-import Select from "../ui/Select";
+import { Select, SelectContent, SelectItem } from "../ui/select";
 export interface TakePictureProps {
     onCapture: (file: File, dataUrl: string, type: string) => void;
     onCancel?: () => void;
@@ -283,15 +283,13 @@ const TakePicture: React.FC<TakePictureProps> = ({
                             <DialogTitle>Select Document Type</DialogTitle>
                         </DialogHeader>
                         <Select
-                            options={[
-                                { label: "None", value: "" },
-                                { label: "Lab Test", value: "lab" },
-                                { label: "Prescription", value: "prescription" },
-                                { label: "Diagnosis", value: "diagnosis" },
-                                { label: "Visit", value: "visit" },
-                            ]}
                             onChange={(e) => handleSelectTypeAndConfirm(e.target.value as "lab" | "prescription" | "diagnosis" | "visit")}
                         >
+                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="lab">Lab Test</SelectItem>
+                            <SelectItem value="prescription">Prescription</SelectItem>
+                            <SelectItem value="diagnosis">Diagnosis</SelectItem>
+                            <SelectItem value="visit">Visit</SelectItem>
                         </Select>
                     </DialogContent>
                 </Dialog>
