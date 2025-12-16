@@ -100,12 +100,21 @@ Medilink/
 
 The application uses Prisma with PostgreSQL. Key models include:
 
-- **Doctor** - Healthcare provider profiles with credentials, specialization, and verification status
-- **Patient** - Patient profiles with medical history, allergies, and linked documents
-- **Prescriptions** - Digital prescriptions with medicine lists and checkup schedules
-- **Medicine** - Medicine details with dosage, timing, and food instructions
-- **Document** - Medical document storage with file URLs and metadata
-- **Checkup** - Follow-up checkup schedules and notes
+- **Doctor** - Healthcare provider profiles with credentials, specialization, verification status, subscription management, and profile information (consultation fees, qualifications, experience, bio, profile picture)
+- **Patient** - Patient profiles with medical history, allergies, demographics (age, gender, blood group, weight), and linked documents
+- **Prescriptions** - Digital prescriptions with prescription text, medicine lists, and checkup schedules linked to both doctor and patient
+- **Medicine** - Medicine details with dosage (JSON), timing (DateTime), and food timing instructions (before/after food)
+- **Document** - Medical document storage with file URLs, type, name, and metadata linked to patients
+- **Checkup** - Follow-up checkup schedules with checkup date, notes, and active status
+- **Subscription** - Subscription management for doctors with plans (monthly/yearly), status tracking, Razorpay integration, and auto-renewal settings
+- **PaymentTransaction** - Payment transaction records with Razorpay payment/order IDs, amount, currency, status, and payment method tracking
+
+### Enums
+
+- **SubscriptionStatus** - ACTIVE, INACTIVE, EXPIRED, CANCELLED, GRACE_PERIOD
+- **SubscriptionPlan** - MONTHLY, YEARLY
+- **PaymentStatus** - PENDING, SUCCESS, FAILED, REFUNDED
+- **FoodTiming** - BEFORE, AFTER
 
 ## 🚀 Getting Started
 
@@ -114,33 +123,6 @@ The application uses Prisma with PostgreSQL. Key models include:
 - **Node.js** >= 18
 - **Bun** >= 1.2.2 (package manager)
 - **PostgreSQL** database
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd Medilink
-```
-
-2. Install dependencies:
-```bash
-bun install
-```
-
-3. Set up environment variables:
-   - Create `.env` files in `apps/backend` and `apps/frontend` as needed
-   - Configure database connection, JWT secrets, and other service credentials
-
-4. Generate Prisma client:
-```bash
-bun run db:generate
-```
-
-5. Run database migrations:
-```bash
-bun run db:migrate
-```
 
 ### Development
 
@@ -152,6 +134,60 @@ bun run dev
 This will start:
 - Frontend: `http://localhost:3001`
 - Backend: `http://localhost:3000`
+
+
+## For collaborators
+**Follow the steps to setup the project**
+
+1. Clone repo 
+   ```bash
+   git clone https://github.com/GlaDrancE/Medilink.git
+   ```
+
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
+
+3. Set up environment variables:
+   - Copy `.env.example` to `.env` in all respective folders:
+     - Root directory: `.env.example` → `.env`
+     - `apps/frontend/.env.example` → `apps/frontend/.env`
+     - `packages/db/.env example` → `packages/db/.env`
+
+4. Generate Prisma client:
+   ```bash
+   bun db:generate
+   ```
+
+5. Run PostgreSQL database instance (Docker recommended):
+   ```bash
+   docker run --network medilink -v medilink -p 5433:5433 -e POSTGRES_PASSWORD=postgres --name medilink -d postgres-alpine
+   ```
+
+6. Configure PostgreSQL connection:
+   - Set up PostgreSQL URL in `./packages/db/.env` and root `.env` file
+
+7. Run database migrations:
+   ```bash
+   bun db:migrate
+   ```
+
+8. Create ngrok URL pointing to backend port:
+   - Set up ngrok tunnel for your backend port (typically port 3000)
+
+9. Configure webhooks:
+   - Add ngrok public URL for Clerk webhook
+   - Add ngrok public URL for Razorpay webhook
+
+10. Start development server:
+    ```bash
+    bun run dev
+    ```
+
+11. Visit the application:
+    - Open `http://localhost:3001` in your browser
+
 
 ### Available Scripts
 
