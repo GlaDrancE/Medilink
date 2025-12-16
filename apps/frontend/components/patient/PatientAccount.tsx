@@ -2,7 +2,7 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { User } from "lucide-react";
 import { Label } from "../ui/label";
-import Input from "../ui/Input";
+import Input from "../ui/input";
 import { Save, Edit3 } from "lucide-react";
 import { useState } from "react";
 import { Patient } from "@/types";

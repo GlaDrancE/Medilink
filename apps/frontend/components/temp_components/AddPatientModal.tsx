@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Modal from './ui/modal';
 import Input from './ui/input';
 import Select from './ui/select';
-import Textarea from './ui/Textarea';
+import { Textarea } from './ui/textarea';
 import { Button } from '@/components/ui/button';
 import AutocompleteInput from './ui/AutocompleteInput';
 import Calendar from './ui/calendar';
@@ -58,20 +58,6 @@ interface PatientData {
     additionalNotes: string;
 }
 
-const COMMON_MEDICAL_CONDITIONS = [
-    'Fever, Cold, and Cough',
-    'Diarrhea and Stomach Upset',
-    'Minor Injuries',
-    'Skin Rashes and Infections',
-    'Headaches and Body Aches',
-    'Indigestion',
-    'Acidity',
-    'Prenatal Check-ups',
-    'Diabetes',
-    'Hypertension',
-    'Prescription Refills'
-];
-
 const AddPatientModal: React.FC<AddPatientModalProps> = ({
     isOpen,
     onClose,
@@ -82,7 +68,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     const [phoneNumber, setPhoneNumber] = useState('');
     const [phoneError, setPhoneError] = useState('');
     const [isSearching, setIsSearching] = useState(false);
-    const [foundPatient, setFoundPatient] = useState<any>(null);
+    const [foundPatient, setFoundPatient] = useState<any[]>([]);
     const [showAddNewOption, setShowAddNewOption] = useState(false);
     const [hospitalOptions, setHospitalOptions] = useState<any[]>([]);
     const [doctorOptions, setDoctorOptions] = useState<any[]>([]);
@@ -124,10 +110,6 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         prescription_id: ""
     });
     const [medicineError, setMedicineError] = useState<string>('');
-    const [showConditionDropdown, setShowConditionDropdown] = useState(false);
-    const [filteredConditions, setFilteredConditions] = useState<string[]>([]);
-    const [currentSearchTerm, setCurrentSearchTerm] = useState<string>('');
-    const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const dosageOptions = [
         { value: '1', label: '1' },
@@ -179,15 +161,9 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             if (!patient?.id) return;
             setHistoryLoading(true);
             try {
-                // TODO: Replace with real API call (doctor-facing) to fetch patient history by id
-                // For now, keep placeholders so UI is scannable even without data
-                // setPatientHistory(prev => ({
-                //     ...prev,
-                //     prescriptions: [],
-                //     labTests: [],
-                //     diagnoses: [],
-                //     visits: [],
-                // }));
+                // Categorize documents from backend data
+                const categorizedHistory = categorizePatientData(patient);
+                setPatientHistory(categorizedHistory);
             } catch (e) {
                 // noop
             } finally {
@@ -238,7 +214,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             const validation = validatePhoneNumber(phoneNumber);
             if (!validation.isValid) {
                 setPhoneError(validation.message);
-                setFoundPatient(null);
+                setFoundPatient([]);
                 setShowAddNewOption(false);
                 return;
             }
@@ -250,14 +226,15 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                 try {
                     const patient = await searchPatientByPhone(phoneNumber);
                     setFoundPatient(patient);
+                    console.log(patient)
                     setShowAddNewOption(true);
                 } catch (error: any) {
                     if (error.response?.status === 404) {
-                        setFoundPatient(null);
+                        setFoundPatient([]);
                         setShowAddNewOption(true);
                     } else {
                         setPhoneError('Error searching for patient');
-                        setFoundPatient(null);
+                        setFoundPatient([]);
                         setShowAddNewOption(false);
                     }
                 } finally {
@@ -265,7 +242,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                 }
             }, 500);
         } else {
-            setFoundPatient(null);
+            setFoundPatient([]);
             setShowAddNewOption(false);
             setIsSearching(false);
         }
@@ -277,30 +254,92 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         };
     }, [phoneNumber]);
 
+    // Function to categorize patient data into history format
+    const categorizePatientData = (patientData: any) => {
+        const categorized = {
+            labTests: [] as Array<{ id: string; name: string; date: string; summary?: string; pdfUrl?: string }>,
+            prescriptions: [] as Array<Prescriptions | PatientDocument>,
+            diagnoses: [] as Array<{ id: string; name: string; severity?: 'low' | 'medium' | 'high' }>,
+            visits: [] as Array<{ id: string; date: string; location?: string; note?: string }>
+        };
+
+        if (patientData.documents) {
+            patientData.documents.forEach((doc: any) => {
+                switch (doc.type) {
+                    case 'lab_test':
+                    case 'test':
+                        categorized.labTests.push({
+                            id: doc.id,
+                            name: doc.name || 'Lab Test',
+                            date: doc.createdAt,
+                            pdfUrl: doc.file_url
+                        });
+                        break;
+                    case 'prescription':
+                        categorized.prescriptions.push({
+                            id: doc.id,
+                            file_url: doc.file_url,
+                            type: doc.type,
+                            name: doc.name,
+                            createdAt: doc.createdAt,
+                            updatedAt: doc.updatedAt
+                        } as PatientDocument);
+                        break;
+                    case 'diagnosis':
+                        categorized.diagnoses.push({
+                            id: doc.id,
+                            name: doc.name || 'Diagnosis Document',
+                            severity: 'medium' // Default severity, can be determined from document content
+                        });
+                        break;
+                    case 'visit':
+                    case 'visit_note':
+                        categorized.visits.push({
+                            id: doc.id,
+                            date: doc.createdAt,
+                            note: doc.name || 'Visit record'
+                        });
+                        break;
+                    default:
+                        // For unknown types, categorize as diagnoses
+                        categorized.diagnoses.push({
+                            id: doc.id,
+                            name: doc.name || `${doc.type} Document`,
+                            severity: 'low'
+                        });
+                        break;
+                }
+            });
+        }
+
+        // Add prescription data from prescriptions array
+        if (patientData.prescriptions) {
+            patientData.prescriptions.forEach((prescription: any) => {
+                categorized.prescriptions.push(prescription as Prescriptions);
+
+                // Add visit record for each prescription
+                categorized.visits.push({
+                    id: prescription.id + '_visit',
+                    date: prescription.prescription_date,
+                    location: prescription.doctor?.hospital,
+                    note: `Prescription by Dr. ${prescription.doctor?.name} (${prescription.doctor?.specialization})`
+                });
+            });
+        }
+
+        return categorized;
+    };
+
     useEffect(() => {
         if (patient) {
-            patient.prescriptions?.forEach(prescription => {
-                patient.documents?.forEach(doc => {
-                    if (new Date(prescription.createdAt.toISOString()) <= new Date(doc.createdAt)) {
-                        setPatientHistory(prev => ({ ...prev, prescriptions: [...prev.prescriptions as any, prescription] }))
-                    }
-                })
-            })
+            console.log('Patient data:', patient);
+            // Immediately categorize data when patient is set
+            const categorizedHistory = categorizePatientData(patient);
+            setPatientHistory(categorizedHistory);
         }
-    }, [patient]);
+    }, [patient])
 
-    useEffect(() => {
-        console.log("patientHistory", patientHistory)
-    }, [patientHistory])
 
-    // Cleanup timeout on unmount
-    useEffect(() => {
-        return () => {
-            if (dropdownTimeoutRef.current) {
-                clearTimeout(dropdownTimeoutRef.current);
-            }
-        };
-    }, []);
 
     const validateForm = (): boolean => {
         const newErrors: Partial<PatientData> = {};
@@ -543,7 +582,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         setCurrentStep('phone');
         setPhoneNumber('');
         setPhoneError('');
-        setFoundPatient(null);
+        setFoundPatient([]);
         setShowAddNewOption(false);
         setIsSearching(false);
         setFormData({
@@ -567,14 +606,6 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         setMedicineInput({ id: "", name: '', dosage: { morning: '', afternoon: '', night: '' }, time: new Date().toISOString(), before_after_food: "", prescription_id: "" });
         setMedicineError('');
         setCustomDosage({ morning: '', afternoon: '', night: '' });
-        // Clear dropdown timeout
-        if (dropdownTimeoutRef.current) {
-            clearTimeout(dropdownTimeoutRef.current);
-            dropdownTimeoutRef.current = null;
-        }
-        setShowConditionDropdown(false);
-        setFilteredConditions([]);
-        setCurrentSearchTerm('');
         onClose();
     };
 
@@ -583,101 +614,6 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         // Clear error when user starts typing
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: undefined }));
-        }
-    };
-
-    const handleAddCondition = (condition: string) => {
-        // Clear any pending timeout
-        if (dropdownTimeoutRef.current) {
-            clearTimeout(dropdownTimeoutRef.current);
-            dropdownTimeoutRef.current = null;
-        }
-
-        const currentDisease = formData.disease;
-
-        if (currentDisease.trim() === '') {
-            // If field is empty, just set the condition
-            updateFormData('disease', condition);
-        } else if (currentSearchTerm) {
-            // If we have a search term, try to replace it
-            // Get the last part after the last comma
-            const parts = currentDisease.split(',').map(p => p.trim());
-            const lastPart = parts[parts.length - 1] || '';
-
-            // Check if the last part contains the search term
-            const lastPartLower = lastPart.toLowerCase().trim();
-            const searchTermLower = currentSearchTerm.toLowerCase().trim();
-
-            if (lastPartLower === searchTermLower) {
-                // Last part is exactly the search term, replace the entire last part
-                let newValue = '';
-                if (parts.length > 1) {
-                    newValue = parts.slice(0, -1).join(', ') + ', ' + condition;
-                } else {
-                    newValue = condition;
-                }
-                updateFormData('disease', newValue);
-            } else if (lastPartLower.includes(searchTermLower)) {
-                // Search term is somewhere in the last part, replace just that part
-                const searchIndex = lastPartLower.indexOf(searchTermLower);
-                const beforeSearch = lastPart.substring(0, searchIndex).trim();
-                const afterSearch = lastPart.substring(searchIndex + currentSearchTerm.length).trim();
-
-                // Rebuild: keep previous parts, replace search term in last part
-                let newValue = '';
-                if (parts.length > 1) {
-                    newValue = parts.slice(0, -1).join(', ') + ', ';
-                }
-
-                // Add condition (replacing the search term)
-                if (beforeSearch) newValue += beforeSearch + ' ';
-                newValue += condition;
-                if (afterSearch) newValue += ' ' + afterSearch;
-
-                updateFormData('disease', newValue.trim());
-            } else {
-                // Search term not found in last part, append normally
-                const separator = currentDisease.trim().endsWith(',') ? ' ' : ', ';
-                updateFormData('disease', currentDisease.trim() + separator + condition);
-            }
-        } else {
-            // No search term, append with comma if not already present
-            const separator = currentDisease.trim().endsWith(',') ? ' ' : ', ';
-            updateFormData('disease', currentDisease.trim() + separator + condition);
-        }
-
-        setShowConditionDropdown(false);
-        setFilteredConditions([]);
-        setCurrentSearchTerm('');
-    };
-
-    // Filter conditions based on textarea input
-    const handleDiseaseChange = (value: string) => {
-        updateFormData('disease', value);
-
-        // Get the last word or phrase being typed (after the last comma or space)
-        // This handles cases like "c", "co", "cough", etc.
-        const parts = value.split(',').map(p => p.trim());
-        const lastPart = parts[parts.length - 1] || '';
-
-        // Also check if there's a space-separated word at the end
-        const words = lastPart.split(/\s+/);
-        const searchTerm = words[words.length - 1] || lastPart;
-
-        // Store the original search term (with original case) for replacement
-        setCurrentSearchTerm(searchTerm);
-
-        if (searchTerm.length > 0) {
-            // Filter conditions that match the typed text (case-insensitive)
-            const filtered = COMMON_MEDICAL_CONDITIONS.filter(condition =>
-                condition.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            setFilteredConditions(filtered);
-            setShowConditionDropdown(filtered.length > 0 && searchTerm.length > 0);
-        } else {
-            setFilteredConditions([]);
-            setShowConditionDropdown(false);
-            setCurrentSearchTerm('');
         }
     };
 
@@ -700,6 +636,8 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         setCurrentStep('phone');
         setErrors({});
     };
+
+    console.log(patientHistory.prescriptions.length)
 
     return (
         <Modal
@@ -772,7 +710,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                             </>
                         )}
 
-                        {showAddNewOption && foundPatient.length <= 0 && !isSearching && (
+                        {showAddNewOption && (!foundPatient || foundPatient.length <= 0) && !isSearching && (
                             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <div className="flex items-center">
                                     <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -914,68 +852,15 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                         Medical Information
                                     </h4>
                                     <div className="space-y-4">
-                                        <div className='border-2 border-muted rounded-xl p-2 relative'>
-                                            <Textarea
-                                                label=""
-                                                value={formData.disease}
-                                                onChange={(e) => handleDiseaseChange(e.target.value)}
-                                                onFocus={() => {
-                                                    // Show all conditions when focusing on empty field
-                                                    if (!formData.disease.trim()) {
-                                                        setFilteredConditions(COMMON_MEDICAL_CONDITIONS);
-                                                        setShowConditionDropdown(true);
-                                                    }
-                                                }}
-                                                onBlur={() => {
-                                                    // Close dropdown after a delay to allow button clicks
-                                                    dropdownTimeoutRef.current = setTimeout(() => {
-                                                        setShowConditionDropdown(false);
-                                                        setFilteredConditions([]);
-                                                    }, 200);
-                                                }}
-                                                placeholder="Describe the patient's current medical condition or diagnosis"
-                                                error={errors.disease}
-                                                disabled={loading}
-                                                className='border-none'
-                                                rows={3}
-                                            />
-                                            {/* Autocomplete Dropdown / Common Conditions Quick Select */}
-                                            <div className="mt-2">
-                                                {showConditionDropdown && filteredConditions.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {filteredConditions.map((condition) => (
-                                                            <button
-                                                                key={condition}
-                                                                type="button"
-                                                                onMouseDown={(e) => {
-                                                                    // Prevent blur event when clicking button
-                                                                    e.preventDefault();
-                                                                }}
-                                                                onClick={() => handleAddCondition(condition)}
-                                                                disabled={loading}
-                                                                className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            >
-                                                                {condition}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {COMMON_MEDICAL_CONDITIONS.map((condition) => (
-                                                            <button
-                                                                key={condition}
-                                                                type="button"
-                                                                onClick={() => handleAddCondition(condition)}
-                                                                disabled={loading}
-                                                                className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            >
-                                                                {condition}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
+                                        <Textarea
+                                            label="Disease/Medical Condition *"
+                                            value={formData.disease}
+                                            onChange={(e) => updateFormData('disease', e.target.value)}
+                                            placeholder="Describe the patient's current medical condition or diagnosis"
+                                            error={errors.disease}
+                                            disabled={loading}
+                                            rows={3}
+                                        />
                                         {/* Medicines List Input */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Prescribed Medicines *</label>
@@ -988,6 +873,14 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                         placeholder="Medicine Name"
                                                         disabled={loading}
                                                         className='w-full'
+                                                    />
+
+                                                    <Input
+                                                        placeholder="Quantity"
+                                                        value={medicineInput.quantity || ''}
+                                                        onChange={e => setMedicineInput(m => ({ ...m, quantity: e.target.value }))}
+                                                        disabled={loading}
+                                                        className='w-24'
                                                     />
 
                                                     {/* Compact Dosage Selector */}
@@ -1069,6 +962,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                         <TableHeader>
                                                             <TableRow>
                                                                 <TableHead className="text-xs font-semibold">Name</TableHead>
+                                                                <TableHead className="text-xs font-semibold">Quantity</TableHead>
                                                                 <TableHead className="text-xs font-semibold">Dosage</TableHead>
                                                                 <TableHead className="text-xs font-semibold">Food</TableHead>
                                                                 <TableHead className="text-xs font-semibold">Notes</TableHead>
@@ -1080,6 +974,9 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                                 <TableRow key={idx}>
                                                                     <TableCell className="text-xs font-bold text-gray-900">
                                                                         {med.name}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-xs text-gray-900">
+                                                                        {med.quantity || '-'}
                                                                     </TableCell>
                                                                     <TableCell className="text-xs flex gap-2">
                                                                         {timeKeys.map((t) => (
@@ -1127,7 +1024,6 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                     </h4>
                                     <Calendar
                                         label="Next Appointment Date"
-                                        // today={true}
                                         value={formData.nextAppointment}
                                         onChange={val => updateFormData('nextAppointment', val)}
                                         error={errors.nextAppointment}
@@ -1345,6 +1241,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                 .map((prescription, index) => (
 
 
+
                                                     <div key={index} className="border rounded-md">
                                                         <button
                                                             type="button"
@@ -1353,10 +1250,12 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <FileText className="w-4 h-4 text-gray-600" />
-                                                                <span className="text-sm text-gray-800">{prescription?.name || patient?.name || 'Prescription'}</span>
+                                                                <span className="text-sm text-gray-800">
+                                                                    {'patient' in prescription ? prescription?.patient?.name : prescription?.name || patient?.name || 'Prescription'}
+                                                                </span>
                                                             </div>
                                                             <div className="flex items-center gap-3">
-                                                                <span className="text-xs text-gray-500">{prescription?.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : ''}</span>
+                                                                <span className="text-xs text-gray-500">{prescription?.createdAt ? new Date(prescription.createdAt.toISOString()).toLocaleDateString() : ''}</span>
                                                                 {expandedPrescriptionDocs[String(prescription.id)] ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
                                                             </div>
                                                         </button>
@@ -1442,6 +1341,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                         {expandedSections.diagnoses ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
                                     </button>
                                     {expandedSections.diagnoses && (
+
                                         <div className="px-4 pb-3 space-y-2">
                                             {patientHistory.diagnoses.length === 0 && (
                                                 <div className="text-sm text-gray-500">No diagnoses.</div>
@@ -1458,9 +1358,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                 {/* 📅 Visit Timeline */}
                                 <div className="border rounded-md">
                                     <button type="button" className="w-full px-4 py-2 flex items-center gap-2" onClick={() => toggleSection('visits')}>
-                                        <CalendarIcon className="w-4 h-4 text-emerald-600"
-                                        />
-
+                                        <CalendarIcon className="w-4 h-4 text-emerald-600" />
                                         <span className="text-sm font-medium">Visit Timeline</span>
                                         <span className="ml-auto text-xs text-gray-500">{patientHistory.visits.length}</span>
                                         {expandedSections.visits ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}

@@ -68,6 +68,7 @@ export interface Prescriptions {
     medicine_list: MedicineEntry[]
     checkups?: Checkup[]
     doctor: Doctor
+    name?: string
     patient: Patient
 }
 

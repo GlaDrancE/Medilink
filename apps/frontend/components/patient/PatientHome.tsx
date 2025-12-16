@@ -34,7 +34,7 @@ const PatientHome = ({ patient }: { patient: Patient }) => {
                             <CardContent className="p-4">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <p className="font-medium text-gray-800">Prescription - {formatDate(prescription.createdAt)}</p>
+                                        <p className="font-medium text-gray-800">Prescription - {formatDate(prescription.createdAt.toISOString())}</p>
                                         <p className="text-sm text-gray-600">ID: {prescription.id}</p>
                                     </div>
                                     {expandedPrescription === index + 1 ?

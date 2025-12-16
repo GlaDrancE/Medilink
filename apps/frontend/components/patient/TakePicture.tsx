@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, RefreshCw, Check, Image as ImageIcon, X, RotateCw } from "lucide-react";
 import { Patient } from "@/types";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "../ui/dialog";
-import Select from "../ui/Select";
+import Select from "../ui/select";
 export interface TakePictureProps {
     onCapture: (file: File, dataUrl: string, type: string) => void;
     onCancel?: () => void;
