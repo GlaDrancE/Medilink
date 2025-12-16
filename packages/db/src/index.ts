@@ -5,7 +5,20 @@ import path from 'path'
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") })
 
-console.log(process.env.DATABASE_URL)
+// Export types for subscription system
+export type {
+    Doctor,
+    Patient,
+    Subscription,
+    PaymentTransaction,
+} from "./generated/prisma/client";
+export {
+    SubscriptionStatus,
+    SubscriptionPlan,
+    PaymentStatus,
+} from "./generated/prisma/client";
+
+export * from "./subscription.types";
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL || ''
 });
