@@ -9,6 +9,9 @@ import Select from '@/components/ui/select';
 import { searchPatientByPhone, createPatient, registerPatient, loginPatient } from '@/services/api.routes';
 import { Patient } from '@/types';
 
+// Force dynamic rendering to prevent build-time prerendering
+export const dynamic = 'force-dynamic'
+
 export default function PatientAuthPage() {
     const router = useRouter();
     const [phoneNumber, setPhoneNumber] = useState('');

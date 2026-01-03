@@ -6,6 +6,9 @@ import { uploadDocument, uploadFile } from '@/services/api.routes'
 import { Patient } from '@/types'
 import React from 'react'
 
+// Force dynamic rendering to prevent build-time prerendering
+export const dynamic = 'force-dynamic'
+
 type Props = {}
 
 const UploadPage = (props: Props) => {
