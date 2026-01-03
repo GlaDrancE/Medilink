@@ -6,6 +6,8 @@ import { Camera, RefreshCw, Check, Image as ImageIcon, X, RotateCw } from "lucid
 import { Patient } from "@/types";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "../ui/dialog";
 import Select from "../ui/select";
+import { usePatientActiveTab } from "@/hooks/patientActiveTab";
+import { useRouter } from "next/navigation";
 export interface TakePictureProps {
     onCapture: (file: File, dataUrl: string, type: string) => void;
     onCancel?: () => void;
@@ -28,6 +30,7 @@ const TakePicture: React.FC<TakePictureProps> = ({
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
+    const router = useRouter();
 
     const [isStarting, setIsStarting] = useState<boolean>(false);
     const [isCapturing, setIsCapturing] = useState<boolean>(false);
@@ -36,7 +39,7 @@ const TakePicture: React.FC<TakePictureProps> = ({
     const [capturedDataUrl, setCapturedDataUrl] = useState<string>("");
     const [documentType, setDocumentType] = useState<"lab" | "prescription" | "diagnosis" | "visit" | null>(null);
     const [selectDocumentType, setSelectDocumentType] = useState<boolean>(false);
-
+    const { activeTab, setActiveTab } = usePatientActiveTab();
     const stopCamera = useCallback(() => {
         const currentStream = streamRef.current;
         if (currentStream) {
@@ -168,6 +171,8 @@ const TakePicture: React.FC<TakePictureProps> = ({
             return;
         }
         onCapture(file, capturedDataUrl, documentType);
+
+        setCapturedDataUrl("")
 
     };
 

@@ -23,11 +23,11 @@ export const PrescriptionWindow = ({ prescription, isRecent = false }: { prescri
                     <CardHeader className="pb-3">
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-lg font-semibold text-gray-800">
-                                {isRecent ? 'Recent Prescription' : `Prescription - ${formatDate(prescription.createdAt.toISOString())}`}
+                                {isRecent ? 'Recent Prescription' : `Prescription - ${prescription.createdAt ? formatDate(prescription.createdAt.toString()) : ''}`}
                             </CardTitle>
                             <div className="flex items-center text-sm text-gray-500">
                                 <Calendar className="w-4 h-4 mr-1" />
-                                {formatDate(prescription.createdAt.toISOString())}
+                                {prescription.createdAt ? formatDate(prescription.createdAt.toString()) : ''}
                             </div>
                         </div>
                     </CardHeader>

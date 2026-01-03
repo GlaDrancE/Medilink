@@ -119,7 +119,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         id: "",
         name: '',
         dosage: { morning: '', afternoon: '', night: '' },
-        time: new Date().toISOString(),
+        time: new Date().toString(),
         before_after_food: "",
         prescription_id: ""
     });
@@ -279,19 +279,97 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
 
     useEffect(() => {
         if (patient) {
-            patient.prescriptions?.forEach(prescription => {
-                patient.documents?.forEach(doc => {
-                    if (new Date(prescription.createdAt.toISOString()) <= new Date(doc.createdAt)) {
-                        setPatientHistory(prev => ({ ...prev, prescriptions: [...prev.prescriptions as any, prescription] }))
+            // Initialize categorized history
+            const categorized = {
+                labTests: [] as Array<{ id: string; name: string; date: string; summary?: string; pdfUrl?: string }>,
+                prescriptions: [] as Array<Prescriptions | PatientDocument>,
+                diagnoses: [] as Array<{ id: string; name: string; severity?: 'low' | 'medium' | 'high' }>,
+                visits: [] as Array<{ id: string; date: string; location?: string; note?: string }>
+            };
+
+            // Add all prescriptions from patient.prescriptions
+            if (patient.prescriptions && Array.isArray(patient.prescriptions)) {
+                categorized.prescriptions = [...patient.prescriptions];
+            }
+
+            // Categorize documents by type
+            if (patient.documents && Array.isArray(patient.documents)) {
+                patient.documents.forEach((doc) => {
+                    switch (doc.type?.toLowerCase()) {
+                        case 'lab':
+                            categorized.labTests.push({
+                                id: doc.id,
+                                name: doc.name || 'Lab Test',
+                                date: doc.createdAt || new Date().toISOString(),
+                                pdfUrl: doc.file_url
+                            });
+                            break;
+                        case 'prescription':
+                            // Add prescription documents to prescriptions array
+                            categorized.prescriptions.push({
+                                id: doc.id,
+                                file_url: doc.file_url,
+                                type: doc.type,
+                                name: doc.name,
+                                createdAt: doc.createdAt,
+                                updatedAt: doc.updatedAt
+                            } as PatientDocument);
+                            break;
+                        case 'diagnosis':
+                            categorized.diagnoses.push({
+                                id: doc.id,
+                                name: doc.name || 'Diagnosis Document',
+                                severity: 'medium' // Default severity
+                            });
+                            break;
+                        case 'visit':
+                            categorized.visits.push({
+                                id: doc.id,
+                                date: doc.createdAt || new Date().toISOString(),
+                                location: doc.name || undefined,
+                                note: undefined
+                            });
+                            break;
+                        default:
+                            // If type is not recognized, skip or handle as needed
+                            break;
                     }
-                })
-            })
+                });
+            }
+
+            // Sort prescriptions by date (newest first)
+            categorized.prescriptions.sort((a, b) => {
+                const dateA = isPatientDocument(a)
+                    ? new Date(a.createdAt).getTime()
+                    : new Date(a.createdAt).getTime();
+                const dateB = isPatientDocument(b)
+                    ? new Date(b.createdAt).getTime()
+                    : new Date(b.createdAt).getTime();
+                return dateB - dateA;
+            });
+
+            // Sort lab tests by date (newest first)
+            categorized.labTests.sort((a, b) => {
+                return new Date(b.date).getTime() - new Date(a.date).getTime();
+            });
+
+            // Sort visits by date (newest first)
+            categorized.visits.sort((a, b) => {
+                return new Date(b.date).getTime() - new Date(a.date).getTime();
+            });
+
+            setPatientHistory(categorized);
+        } else {
+            // Reset history when patient is cleared
+            setPatientHistory({
+                labTests: [],
+                prescriptions: [],
+                diagnoses: [],
+                visits: []
+            });
         }
     }, [patient]);
 
-    useEffect(() => {
-        console.log("patientHistory", patientHistory)
-    }, [patientHistory])
 
     // Cleanup timeout on unmount
     useEffect(() => {
@@ -357,6 +435,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             return;
         }
         if (patient) {
+            console.log("patient", patient)
             setPatient(patient)
             setFormData(prev => ({ ...prev, phone: patient.phone, name: patient.name || "", weight: patient.weight.toString(), age: patient.age.toString(), gender: patient.gender || "" }))
         }
@@ -404,7 +483,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         prescriptions: [],
                     },
                     patient_id: patient.id as string,
-                    prescription_date: new Date().toISOString(),
+                    prescription_date: new Date().toString(),
                     is_active: true,
                     nextAppointment: new Date(),
                     createdAt: new Date(),
@@ -439,7 +518,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         patients: [],
                         prescriptions: [],
                     },
-                    prescription_date: new Date().toISOString(),
+                    prescription_date: new Date().toString(),
                     is_active: true,
                     nextAppointment: new Date(),
                     createdAt: new Date(),
@@ -564,7 +643,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         });
         setErrors({});
         setMedicinesList([]);
-        setMedicineInput({ id: "", name: '', dosage: { morning: '', afternoon: '', night: '' }, time: new Date().toISOString(), before_after_food: "", prescription_id: "" });
+        setMedicineInput({ id: "", name: '', dosage: { morning: '', afternoon: '', night: '' }, time: new Date().toString(), before_after_food: "", prescription_id: "" });
         setMedicineError('');
         setCustomDosage({ morning: '', afternoon: '', night: '' });
         // Clear dropdown timeout
@@ -687,7 +766,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
             return;
         }
         setMedicinesList(prev => [...prev, medicineInput]);
-        setMedicineInput({ id: "", name: '', dosage: { morning: '', afternoon: '', night: '' }, time: new Date().toISOString(), before_after_food: "", prescription_id: "" });
+        setMedicineInput({ id: "", name: '', dosage: { morning: '', afternoon: '', night: '' }, time: new Date().toString(), before_after_food: "", prescription_id: "" });
         setCustomDosage({ morning: '', afternoon: '', night: '' });
         setMedicineError('');
     };

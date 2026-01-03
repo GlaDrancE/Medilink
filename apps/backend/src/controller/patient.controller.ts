@@ -104,11 +104,6 @@ export const searchPatientByPhone = async (req: Request, res: Response) => {
                 }
             }
         });
-
-        // if (!patient) {
-        //     return res.status(404).json({ message: "Patient not found" });
-        // }
-
         res.status(200).json(patient);
     } catch (error) {
         console.log(error)
@@ -162,7 +157,6 @@ export const uploadDocument = async (req: Request, res: Response) => {
                 }
             })
         })
-        console.log(document)
         res.status(200).json(document);
     } catch (error) {
         console.log(error)

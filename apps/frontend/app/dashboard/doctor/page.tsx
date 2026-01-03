@@ -60,7 +60,7 @@ export default function DoctorDashboard() {
         medicine_list: [],
         nextAppointment: new Date(),
         prescription_text: "",
-        prescription_date: new Date().toISOString(),
+        prescription_date: new Date().toString(),
         patient_id: "",
         checkups: [],
         is_active: true,
@@ -136,7 +136,7 @@ export default function DoctorDashboard() {
             medicine_list: [],
             nextAppointment: new Date(),
             prescription_text: "",
-            prescription_date: new Date().toISOString(),
+            prescription_date: new Date().toString(),
             patient_id: "",
             doctor_id: "",
             is_active: true,
@@ -403,7 +403,7 @@ export default function DoctorDashboard() {
                             <SubscriptionStatusIndicator className="text-xs" />
                         </div>
                         <div className="grid grid-cols-1 gap-3">
-                            <SubscriptionGate
+                            {/* <SubscriptionGate
                                 feature="NEW_PATIENT"
                                 fallback={
                                     <div className="relative">
@@ -420,16 +420,16 @@ export default function DoctorDashboard() {
                                         </div>
                                     </div>
                                 }
+                            > */}
+                            <Button
+                                className="justify-start w-full"
+                                onClick={() => setIsAddPatientModalOpen(true)}
                             >
-                                <Button
-                                    className="justify-start w-full"
-                                    onClick={() => setIsAddPatientModalOpen(true)}
-                                >
-                                    <span className="mr-2">➕</span> New Patient
-                                </Button>
-                            </SubscriptionGate>
+                                <span className="mr-2">➕</span> New Patient
+                            </Button>
+                            {/* </SubscriptionGate> */}
 
-                            <SubscriptionGate
+                            {/* <SubscriptionGate
                                 feature="CREATE_PRESCRIPTION"
                                 fallback={
                                     <div className="relative">
@@ -447,17 +447,17 @@ export default function DoctorDashboard() {
                                         </div>
                                     </div>
                                 }
+                            > */}
+                            <Button
+                                variant="outline"
+                                className="justify-start w-full"
+                                onClick={() =>
+                                    alert("Create Prescription flow coming soon")
+                                }
                             >
-                                <Button
-                                    variant="outline"
-                                    className="justify-start w-full"
-                                    onClick={() =>
-                                        alert("Create Prescription flow coming soon")
-                                    }
-                                >
-                                    <span className="mr-2">📝</span> Create Prescription
-                                </Button>
-                            </SubscriptionGate>
+                                <span className="mr-2">📝</span> Create Prescription
+                            </Button>
+                            {/* </SubscriptionGate> */}
 
                             <SubscriptionGate
                                 feature="SEND_REMINDER"

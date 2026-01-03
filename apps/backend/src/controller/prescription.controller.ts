@@ -5,7 +5,6 @@ import { randomUUIDv7 } from "bun";
 
 export const getPrescription = async (req: Request, res: Response) => {
     const userId = req.userId;
-    console.log(userId)
     const prescriptions = await prisma.patient.findFirst({
         where: { id: userId },
         include: {

@@ -15,7 +15,6 @@ export const getDoctorById = async (req: Request, res: Response) => {
         })
         if (!doctor) res.status(404).json({ message: "Doctor not found" });
         res.status(200).json(doctor);
-
     } catch (error) {
         console.log(error)
         res.status(500).json({ error: (error as Error).message });

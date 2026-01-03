@@ -29,21 +29,14 @@ import PatientHeader from '@/components/patient/PatientHeader';
 import PatientFooter from '@/components/patient/PatientFooter';
 import PatientAccount from '@/components/patient/PatientAccount';
 import TakePicture from '@/components/patient/TakePicture';
+import { usePatientActiveTab } from '@/hooks/patientActiveTab';
+import { usePatient } from '@/hooks/usePatient';
 
 const MedicalDashboard = () => {
-    const [activeTab, setActiveTab] = useState('home');
+    const { activeTab, setActiveTab } = usePatientActiveTab();
     const [expandedPrescription, setExpandedPrescription] = useState(0);
     const [prescriptions, setPrescriptions] = useState<Prescriptions[]>([]);
-    const [patient, setPatient] = useState<Patient>({
-        id: '',
-        name: '',
-        age: 0,
-        weight: 0,
-        height: 0,
-        phone: '',
-        email: '',
-        is_active: true
-    });
+    const { patient, setPatient } = usePatient();
     const [isEditing, setIsEditing] = useState(false);
     const [userDetails, setUserDetails] = useState({
         name: 'John Smith',
@@ -81,43 +74,19 @@ const MedicalDashboard = () => {
         fetchPatient();
     }, []);
 
-    const handleCapture = async (file: File, dataUrl: string, type: string) => {
-        const formData = new FormData();
-        formData.append('file', file)
-        formData.append('upload_preset', 'medilink')
-        formData.append("folder", "patient/docs")
-        const repsonse = await uploadFile(formData)
 
-
-        console.log(repsonse.data.secure_url)
-        if (repsonse.status === 200) {
-            const response = await uploadDocument({
-                fileUrl: repsonse.data.secure_url,
-                type: type
-            })
-            if (response.status === 200) {
-                setPatient({
-                    ...patient,
-                    document_id: response.data.id,
-                    documents: [...(patient.documents || []), response.data]
-                })
-            }
-        }
+    if (!patient) {
+        return <div>Loading...</div>
     }
-
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
-            <PatientHeader patient={patient} />
 
             {/* Main Content */}
             <div className="p-4">
                 {activeTab === 'home' && <PatientHome patient={patient} />}
                 {activeTab === 'prescriptions' && <PatientPrescription patient={patient} prescriptions={prescriptions} />}
-                {activeTab === 'upload' && <TakePicture onCapture={handleCapture} />}
-                {activeTab === 'account' && <PatientAccount patient={patient} />}
             </div>
-            <PatientFooter activeTab={activeTab} setActiveTab={setActiveTab} />
 
         </div>
     );

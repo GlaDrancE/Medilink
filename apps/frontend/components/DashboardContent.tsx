@@ -34,7 +34,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Button
             className="justify-start"
-            onClick={() => checkFeatureAccess('NEW_PATIENT', () => setIsAddPatientModalOpen(true))}
+            onClick={() => setIsAddPatientModalOpen(true)}
           >
             <span className="mr-2">➕</span> New Patient
           </Button>

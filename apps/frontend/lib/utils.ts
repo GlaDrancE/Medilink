@@ -7,6 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 // Helper function to format date string
 export const formatDate = (dateString?: string) => {
   if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString();
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
 };
 

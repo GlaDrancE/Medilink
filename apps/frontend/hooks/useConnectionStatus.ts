@@ -1,7 +1,8 @@
+"use client"
 import { useEffect, useState } from "react";
 
 export const useConnectionStatus = () => {
-    const [status, setStatus] = useState(navigator.onLine ? "online" : "offline");
+    const [status, setStatus] = useState("online");
 
     useEffect(() => {
         const update = () => setStatus(navigator.onLine ? "online" : "offline");
