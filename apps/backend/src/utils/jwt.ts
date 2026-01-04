@@ -3,7 +3,6 @@ import { config } from "@repo/common";
 const JWT_SECRET = config.jwt.secret;
 const PATIENT_JWT_SECRET = "random";
 
-
 export function generateToken(payload: Record<string, any>, type: "patient" | "doctor", expiresIn = "1d") {
 
     if (type === "doctor") {
