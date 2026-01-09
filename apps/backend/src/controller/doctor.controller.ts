@@ -53,7 +53,7 @@ export const updateDoctor = async (req: Request, res: Response) => {
             },
             create: {
                 id: id as string,
-                primary_email_address_id: req.body.primary_email_address_id,
+                primary_email_address_id: req.body.primary_email_address_id || "",
                 medical_registration_number: req.body.medical_registration_number,
                 name: req.body.clinic_name,
                 username: req.body.username,
