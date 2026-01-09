@@ -85,6 +85,42 @@ export const addPrescription = async (req: Request, res: Response) => {
             });
             return prescription
         })
+
+        // Fire email notification (non-blocking for DB transaction)
+        try {
+            const patientRecord =
+                newPatient ??
+                (await prisma.patient.findFirst({
+                    where: { id: prescription.patient_id },
+                }));
+
+            if (patientRecord) {
+                await sendPrescriptionEmail({
+                    patient: {
+                        name: patientRecord.name,
+                        email: patientRecord.email,
+                        age: patientRecord.age,
+                        weight: patientRecord.weight,
+                        // height is not persisted; use value from request body if present
+                        height: patient.height ?? null,
+                        phone: patientRecord.phone,
+                    },
+                    doctor: {
+                        name: doctor.name,
+                        hospital: doctor.hospital,
+                    },
+                    medicines: medicine_list ?? [],
+                    prescriptionId: prescription.id,
+                    prescriptionDate: prescription.createdAt,
+                });
+            }
+        } catch (notifyError) {
+            console.error(
+                "Failed to send prescription email notification:",
+                notifyError
+            );
+        }
+
         res.status(201).json(prescription);
     } catch (error) {
         console.log("Error", error);

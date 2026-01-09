@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import Select from '../ui/select'
 import Input from '../ui/input'
 import AutocompleteInput from '../ui/AutocompleteInput'
+import { useHandleCapture } from '@/hooks/useHandleCapture'
 
 const PatientFooter = ({ activeTab, setActiveTab, onCapture }: { activeTab: string, setActiveTab: (tab: string) => void, onCapture: (file: File, dataUrl: string, type: string) => void }) => {
     const router = useRouter();
@@ -19,6 +20,19 @@ const PatientFooter = ({ activeTab, setActiveTab, onCapture }: { activeTab: stri
     const [quantity, setQuantity] = useState(1);
     const [dosage, setDosage] = useState({ morning: "", afternoon: "", night: "" });
     const [beforeAfterFood, setBeforeAfterFood] = useState<"before" | "after" | "">("");
+
+    async function blobToBase64(blob: Blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64 = reader.result?.toString().split(','); // Extract Base64 part
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
     const handleSelectDocument = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -28,11 +42,19 @@ const PatientFooter = ({ activeTab, setActiveTab, onCapture }: { activeTab: stri
             return;
         }
         const reader = new FileReader();
-        reader.onload = () => {
-            onCapture(file, String(reader.result || ""), documentType || "");
+        reader.onload = async () => {
+            console.log(reader.readAsDataURL)
+            console.log(file)
+            onCapture(file, reader.result?.toString().split(',')[1] as string, documentType);
         };
         reader.readAsDataURL(file);
     };
+
+
+    const handleCapture = async (file: File, dataUrl: string, type: string) => {
+        const response = await useHandleCapture(file, dataUrl, type)
+    }
+
     const handleUploadPhoto = () => {
         // setActiveTab('upload')
         router.push('/dashboard/patient/upload')
@@ -65,11 +87,12 @@ const PatientFooter = ({ activeTab, setActiveTab, onCapture }: { activeTab: stri
         })
     }
 
-    const handleSelectTypeAndConfirm = (type: "lab" | "prescription" | "diagnosis" | "visit") => {
+    const handleSelectTypeAndConfirm = async (type: "lab" | "prescription" | "diagnosis" | "visit") => {
         setDocumentType(type);
         setSelectDocumentType(false);
         if (file) {
-            onCapture(file, "", type);
+            const base64 = await blobToBase64(file)
+            onCapture(file, (base64 as string[])[0] + ',' + (base64 as string[])[1] as string, type);
         }
         handleCloseUpload();
         setFile(null);

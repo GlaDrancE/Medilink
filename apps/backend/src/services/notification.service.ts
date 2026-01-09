@@ -1,85 +1,78 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { Resend } from 'resend';
 
 dotenv.config();
 
 type MedicinePayload = {
-    name: string;
-    dosage: {
-        morning?: string;
-        afternoon?: string;
-        night?: string;
-        [key: string]: unknown;
-    };
-    before_after_food?: string;
-    notes?: string;
+  name: string;
+  dosage: {
+    morning?: string;
+    afternoon?: string;
+    night?: string;
+    [key: string]: unknown;
+  };
+  before_after_food?: string;
+  notes?: string;
 };
 
 type PatientPayload = {
-    name?: string | null;
-    email?: string | null;
-    age?: number | null;
-    weight?: number | null;
-    height?: number | null;
-    phone?: string | null;
+  name?: string | null;
+  email?: string | null;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  phone?: string | null;
 };
 
 type DoctorPayload = {
-    name: string;
-    hospital?: string | null;
+  name: string;
+  hospital?: string | null;
 };
 
 type PrescriptionEmailParams = {
-    patient: PatientPayload;
-    doctor: DoctorPayload;
-    medicines: MedicinePayload[];
-    prescriptionId: string;
-    prescriptionDate: Date;
-    portalLink?: string;
+  patient: PatientPayload;
+  doctor: DoctorPayload;
+  medicines: MedicinePayload[];
+  prescriptionId: string;
+  prescriptionDate: Date;
+  portalLink?: string;
 };
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-});
+const resend = new Resend('re_UQxVBAg7_AB8smVjgaVLgJZs5scgWnvV8');
 
 export async function sendPrescriptionEmail(params: PrescriptionEmailParams) {
-    const { patient, doctor, medicines, prescriptionId, prescriptionDate, portalLink } = params;
+  const { patient, doctor, medicines, prescriptionId, prescriptionDate, portalLink } = params;
 
-    if (!patient.email) {
-        console.warn(
-            `sendPrescriptionEmail: patient has no email, skipping email notification for prescription ${prescriptionId}`
-        );
-        return;
-    }
+  if (!patient.email) {
+    console.warn(
+      `sendPrescriptionEmail: patient has no email, skipping email notification for prescription ${prescriptionId}`
+    );
+    return;
+  }
 
-    const portalUrl =
-        portalLink ||
-        process.env.PATIENT_PORTAL_URL ||
-        "https://mediglad.vercel.app/dashboard/patient";
+  const portalUrl =
+    portalLink ||
+    process.env.PATIENT_PORTAL_URL ||
+    "https://mediglad.vercel.app/dashboard/patient";
 
-    const doctorName = doctor.name || "Your Doctor";
-    const hospitalName = doctor.hospital || "Medilink";
+  const doctorName = doctor.name || "Your Doctor";
+  const hospitalName = doctor.hospital || "Medilink";
 
-    const medsRows = medicines
-        .map((med) => {
-            const m = med.dosage?.morning || "-";
-            const a = med.dosage?.afternoon || "-";
-            const n = med.dosage?.night || "-";
-            const notes = med.notes || "-";
-            const food =
-                med.before_after_food === "BEFORE"
-                    ? "Before Food"
-                    : med.before_after_food === "AFTER"
-                        ? "After Food"
-                        : "-";
+  const medsRows = medicines
+    .map((med) => {
+      const m = med.dosage?.morning || "-";
+      const a = med.dosage?.afternoon || "-";
+      const n = med.dosage?.night || "-";
+      const notes = med.notes || "-";
+      const food =
+        med.before_after_food === "BEFORE"
+          ? "Before Food"
+          : med.before_after_food === "AFTER"
+            ? "After Food"
+            : "-";
 
-            return `
+      return `
         <tr>
           <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:600;color:#111827;">
             ${med.name}
@@ -95,10 +88,10 @@ export async function sendPrescriptionEmail(params: PrescriptionEmailParams) {
           </td>
         </tr>
       `;
-        })
-        .join("");
+    })
+    .join("");
 
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -197,12 +190,13 @@ export async function sendPrescriptionEmail(params: PrescriptionEmailParams) {
     </html>
   `;
 
-    await transporter.sendMail({
-        from: process.env.MAIL_FROM || process.env.SMTP_USER,
-        to: patient.email,
-        subject: "Your Prescription is Ready",
-        html,
-    });
+  resend.emails.send({
+    from: 'onboarding@resend.dev',
+    to: patient.email,
+    subject: 'Your Prescription is Ready',
+    html: html
+  });
 }
+
 
 

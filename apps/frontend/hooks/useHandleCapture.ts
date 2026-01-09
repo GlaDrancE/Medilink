@@ -8,11 +8,11 @@ export const useHandleCapture = async (file: File, dataUrl: string, type: string
     const repsonse = await uploadFile(formData)
 
 
-    console.log(repsonse.data.secure_url)
     if (repsonse.status === 200) {
         const response = await uploadDocument({
             fileUrl: repsonse.data.secure_url,
-            type: type
+            type: type,
+            imageData: dataUrl // Send base64 image data for AI analysis
         })
         if (response.status === 200) {
             return response.data;

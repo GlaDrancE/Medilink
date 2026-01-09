@@ -81,14 +81,25 @@ model Patient {
 }
 
 model Document {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   patient_id String
   file_url   String
   type       String
   name       String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  patient    Patient  @relation(fields: [patient_id], references: [id])
+
+  // AI Analysis fields
+  ai_summary             String?
+  ai_key_findings        String[]
+  ai_recommendations     String[]
+  ai_detected_conditions String[]
+  ai_medications         String[]
+  ai_lab_values          Json?
+  ai_confidence          Float?
+  ai_analyzed_at         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  patient   Patient  @relation(fields: [patient_id], references: [id])
 }
 
 model Prescriptions {

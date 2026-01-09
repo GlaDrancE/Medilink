@@ -26,6 +26,8 @@
   ],
   "dependencies": {
     "@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression": "^7.27.1",
+    "@google/genai": "^1.35.0",
+    "@google/generative-ai": "^0.24.1",
     "jsonwebtoken": "^9.0.2",
     "minimatch": "^10.0.3",
     "twilio": "^5.7.2"

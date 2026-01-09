@@ -3,6 +3,7 @@ import axios from "axios";
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1",
+    timeout: 60000, // 60 seconds for AI analysis
 })
 api.interceptors.request.use(async (config) => {
     const token = localStorage.getItem("token");
@@ -134,10 +135,10 @@ export const getPatientById = async () => {
         throw error
     }
 }
-export const uploadDocument = async (data: { fileUrl: string, type: string }) => {
+export const uploadDocument = async (data: { fileUrl: string, type: string, imageData?: string }) => {
     try {
         const response = await api.put('/patient/document', data)
-        return response.data;
+        return response;
     } catch (error) {
         console.log(error)
         throw error
@@ -159,4 +160,30 @@ export const uploadFile = async (formData: FormData) => {
         throw error
     }
 }
+
+// AI Analysis
+export const analyzeDocument = async (imageData: string, documentType: string) => {
+    try {
+        const response = await api.post("/ai/analyze", {
+            imageData,
+            documentType,
+        });
+        return response.data;
+    } catch (error) {
+        console.error("AI Analysis error:", error);
+        throw error;
+    }
+};
+
+export const analyzeDocumentBatch = async (documents: Array<{ imageData: string; documentType: string }>) => {
+    try {
+        const response = await api.post("/ai/analyze/batch", {
+            documents,
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Batch AI Analysis error:", error);
+        throw error;
+    }
+};
 

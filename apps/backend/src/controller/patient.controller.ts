@@ -46,9 +46,20 @@ export const getPatientById = async (req: Request, res: Response) => {
                 },
                 documents: {
                     select: {
+                        id: true,
                         file_url: true,
                         type: true,
                         name: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        ai_summary: true,
+                        ai_key_findings: true,
+                        ai_recommendations: true,
+                        ai_detected_conditions: true,
+                        ai_medications: true,
+                        ai_lab_values: true,
+                        ai_confidence: true,
+                        ai_analyzed_at: true
                     }
                 }
             }
@@ -138,26 +149,60 @@ export const uploadDocument = async (req: Request, res: Response) => {
     const patientId = req.userId
     const fileUrl = req.body.fileUrl;
     const type = req.body.type;
+    const imageData = req.body.imageData; // Base64 image data for AI analysis
+    console.log(imageData)
+
     try {
-        const document = await prisma.$transaction(async (tx) => {
+        // Perform AI analysis first if image data is provided
+        let aiAnalysis = null;
+        if (imageData) {
+            try {
+                const { analyzeMedicalDocument } = await import('../services/ai-analysis.service');
+                aiAnalysis = await analyzeMedicalDocument(imageData, type);
+                console.log("AI Analysis completed:", aiAnalysis);
+            } catch (aiError) {
+                console.error("AI Analysis failed:", aiError);
+                // Continue even if AI analysis fails
+            }
+        }
+
+        // Create document in database with AI analysis results
+        const newDocument = await prisma.$transaction(async (tx) => {
             const patient = await tx.patient.findFirst({ where: { id: patientId } })
             console.log("Calling controller")
             if (!patient) throw new Error("Patient not found")
-            const newDocument = await tx.document.create({
+
+            const doc = await tx.document.create({
                 data: {
                     patient_id: patientId,
                     file_url: fileUrl,
                     type: type,
+                    // Save AI analysis results
+                    ai_summary: aiAnalysis?.summary || undefined,
+                    ai_key_findings: aiAnalysis?.keyFindings || [],
+                    ai_recommendations: aiAnalysis?.recommendations || [],
+                    ai_detected_conditions: aiAnalysis?.detectedConditions || [],
+                    ai_medications: aiAnalysis?.medications || [],
+                    ai_lab_values: aiAnalysis?.labValues || undefined,
+                    ai_confidence: aiAnalysis?.confidence || undefined,
+                    ai_analyzed_at: aiAnalysis ? new Date() : undefined,
                 }
             })
+
             await tx.patient.update({
                 where: { id: patientId },
                 data: {
-                    document_id: newDocument.id,
+                    document_id: doc.id,
                 }
             })
+
+            return doc;
         })
-        res.status(200).json(document);
+
+        res.status(200).json({
+            document: newDocument,
+            aiAnalysis: aiAnalysis
+        });
     } catch (error) {
         console.log(error)
         res.status(500).json({ error: (error as Error).message });

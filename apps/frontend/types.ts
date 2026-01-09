@@ -51,6 +51,27 @@ export interface Document {
     name?: string
     createdAt: string
     updatedAt: string
+    
+    // AI Analysis fields
+    ai_summary?: string | null
+    ai_key_findings?: string[]
+    ai_recommendations?: string[]
+    ai_detected_conditions?: string[]
+    ai_medications?: string[]
+    ai_lab_values?: Record<string, string> | null
+    ai_confidence?: number | null
+    ai_analyzed_at?: string | null
+}
+
+export interface AIAnalysisResult {
+    summary: string
+    keyFindings: string[]
+    recommendations: string[]
+    documentType: string
+    confidence: number
+    detectedConditions?: string[]
+    medications?: string[]
+    labValues?: Record<string, string>
 }
 
 export interface Prescriptions {
