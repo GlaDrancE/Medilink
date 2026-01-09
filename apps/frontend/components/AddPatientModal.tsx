@@ -331,7 +331,11 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                             });
                             break;
                         default:
-                            // If type is not recognized, skip or handle as needed
+                            categorized.diagnoses.push({
+                                id: doc.id,
+                                name: doc.name || 'Diagnosis Document',
+                                severity: 'medium' // Default severity
+                            });
                             break;
                     }
                 });

@@ -49,6 +49,15 @@ const MedicalDashboard = () => {
     const router = useRouter();
 
 
+    useEffect(() => {
+        const fetchPrescriptions = async () => {
+            const prescriptions = await getPrescription();
+            console.log(prescriptions)
+            setPrescriptions(prescriptions as Prescriptions[]);
+        };
+        fetchPrescriptions();
+    }, []);
+
 
 
 

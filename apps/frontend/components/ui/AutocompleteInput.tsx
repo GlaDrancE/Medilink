@@ -9,39 +9,53 @@ interface AutocompleteInputProps {
     className?: string;
 }
 
-// Algolia API details
-const ALGOLIA_URL = 'https://0z9q3se3dl-3.algolianet.com/1/indexes/prod_meds_query_suggestions_new/query';
-const ALGOLIA_APP_ID = '0Z9Q3SE3DL';
-const ALGOLIA_API_KEY = 'daff858f97cc3361e1a3f722e3729753';
+// RxNav API endpoint
+const RXNAV_API_BASE = 'https://rxnav.nlm.nih.gov/REST/drugs.json';
 
-interface AlgoliaHit {
-    display_name: string[];
-    brand_name?: string;
+interface DrugHit {
+    name: string;
+    synonym?: string;
+    rxcui: string;
 }
 
-const fetchMedicines = async (query: string): Promise<AlgoliaHit[]> => {
-    if (!query) return [];
+const fetchMedicines = async (query: string): Promise<DrugHit[]> => {
+    if (!query || query.trim().length < 2) return [];
     try {
-        const res = await fetch(ALGOLIA_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-algolia-application-id': ALGOLIA_APP_ID,
-                'x-algolia-api-key': ALGOLIA_API_KEY,
-            },
-            body: JSON.stringify({
-                params: `query=${encodeURIComponent(query)}&hitsPerPage=8&clickAnalytics=true`
-            })
-        });
+        const encodedQuery = encodeURIComponent(query.trim());
+        const url = `${RXNAV_API_BASE}?name=${encodedQuery}`;
+
+        const res = await fetch(url);
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const data = await res.json();
-        console.log(data)
-        const hits = (data.hits || []).map((hit: any) => ({
-            display_name: hit.display_name,
-            brand_name: hit.brand_name
-        }));
-        console.log(hits)
+
+        // Parse RxNav response structure
+        // Find the conceptGroup with tty: "SBD" and extract conceptProperties
+        const drugGroup = data?.drugGroup;
+        if (!drugGroup || !drugGroup.conceptGroup) {
+            return [];
+        }
+
+        const sbdGroup = drugGroup.conceptGroup.find(
+            (group: any) => group.tty === 'SBD' && group.conceptProperties
+        );
+
+        if (!sbdGroup || !Array.isArray(sbdGroup.conceptProperties)) {
+            return [];
+        }
+
+        // Extract drug names from conceptProperties
+        const hits: DrugHit[] = sbdGroup.conceptProperties.map((prop: any) => ({
+            name: prop.name || '',
+            synonym: prop.synonym || undefined,
+            rxcui: prop.rxcui || ''
+        })).filter((hit: DrugHit) => hit.name); // Filter out entries without names
+
         return hits;
-    } catch {
+    } catch (error) {
+        console.error('Error fetching medicines from RxNav:', error);
         return [];
     }
 };
@@ -54,7 +68,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     disabled,
     className = ''
 }) => {
-    const [suggestions, setSuggestions] = useState<AlgoliaHit[]>([]);
+    const [suggestions, setSuggestions] = useState<DrugHit[]>([]);
     const [loading, setLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [error, setError] = useState('');
@@ -85,8 +99,8 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         }, 400);
     };
 
-    const handleSelect = (display_name: string) => {
-        onSelect(display_name);
+    const handleSelect = (drugName: string) => {
+        onSelect(drugName);
         setShowDropdown(false);
         setSuggestions([]);
     };
@@ -114,17 +128,19 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
             )}
             {showDropdown && suggestions.length > 0 && (
                 <ul className="absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-b-lg shadow max-h-48 overflow-y-auto mt-1">
-                    {suggestions.map((s) => (
-                        s.display_name.map((name: string, i: number) => (
+                    {suggestions.map((drug, index) => {
+                        // Prefer synonym if available (more user-friendly), otherwise use name
+                        const displayName = drug.synonym || drug.name;
+                        return (
                             <li
-                                key={i}
+                                key={`${drug.rxcui}-${index}`}
                                 className="px-4 py-2 hover:bg-green-50 cursor-pointer text-sm text-black"
-                                onMouseDown={() => handleSelect(name)}
+                                onMouseDown={() => handleSelect(displayName)}
                             >
-                                {name}
+                                {displayName}
                             </li>
-                        ))
-                    ))}
+                        );
+                    })}
                 </ul>
             )}
             {error && <div className="text-xs text-red-600 mt-1">{error}</div>}

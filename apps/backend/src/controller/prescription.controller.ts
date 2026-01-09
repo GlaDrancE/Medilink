@@ -1,7 +1,7 @@
 import { Response, Request } from "express";
 import prisma from "@repo/db";
 import { randomUUIDv7 } from "bun";
-
+import { sendPrescriptionEmail } from "../services/notification.service";
 
 export const getPrescription = async (req: Request, res: Response) => {
     const userId = req.userId;
@@ -78,7 +78,7 @@ export const addPrescription = async (req: Request, res: Response) => {
                 data: medicine_list.map((medicine: any) => ({
                     name: medicine.name,
                     dosage: medicine.dosage,
-                    time: medicine.time,
+                    time: new Date(medicine.time),
                     before_after_food: medicine.before_after_food.toUpperCase(),
                     prescription_id: prescription.id,
                 }))
