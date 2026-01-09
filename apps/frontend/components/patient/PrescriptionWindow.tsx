@@ -19,56 +19,58 @@ export const PrescriptionWindow = ({ prescription, isRecent = false }: { prescri
     return (
         <>
             {prescription && (
-                <Card className="w-full mb-4 border-l-4 border-l-blue-500">
-                    <CardHeader className="pb-3">
-                        <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg font-semibold text-gray-800">
-                                {isRecent ? 'Recent Prescription' : `Prescription - ${prescription.createdAt ? formatDate(prescription.createdAt.toString()) : ''}`}
-                            </CardTitle>
-                            <div className="flex items-center text-sm text-gray-500">
-                                <Calendar className="w-4 h-4 mr-1" />
+                <Card className="w-full mb-3 border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-2 pt-4">
+                        <div className="flex justify-between items-start gap-2">
+                            <div className="flex-1">
+                                <CardTitle className="text-base font-bold text-gray-900 leading-tight">
+                                    {isRecent ? '📋 Recent Prescription' : `Prescription - ${prescription.createdAt ? formatDate(prescription.createdAt.toString()) : ''}`}
+                                </CardTitle>
+                            </div>
+                            <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                <Calendar className="w-3 h-3 mr-1" />
                                 {prescription.createdAt ? formatDate(prescription.createdAt.toString()) : ''}
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3 pt-2">
                         {/* Medicines */}
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {prescription.medicine_list.map((medicine: MedicineEntry, idx: number) => (
-                                <div key={idx} className="bg-gray-50 p-3 rounded-lg">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h4 className="font-medium text-gray-800">{medicine.name}</h4>
-                                    </div>
+                                <div key={idx} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-100">
+                                    <h4 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-1">{medicine.name}</h4>
 
-                                    {/* Dosage Grid */}
-                                    <div className="grid grid-cols-3 gap-2 mb-3">
-                                        <div className="text-center">
-                                            <div className="text-xs text-gray-500 mb-1">Morning</div>
-                                            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium min-h-[28px] flex items-center justify-center">
+                                    {/* Compact Dosage Grid */}
+                                    <div className="grid grid-cols-3 gap-1.5 mb-2">
+                                        <div className="bg-white rounded-md p-1.5 text-center border border-blue-200">
+                                            <div className="text-[10px] text-gray-500 font-medium">Morning</div>
+                                            <div className="text-blue-700 font-bold text-sm">
                                                 {medicine.dosage.morning || '-'}
                                             </div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-xs text-gray-500 mb-1">Afternoon</div>
-                                            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium min-h-[28px] flex items-center justify-center">
+                                        <div className="bg-white rounded-md p-1.5 text-center border border-blue-200">
+                                            <div className="text-[10px] text-gray-500 font-medium">Afternoon</div>
+                                            <div className="text-blue-700 font-bold text-sm">
                                                 {medicine.dosage.afternoon || '-'}
                                             </div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-xs text-gray-500 mb-1">Night</div>
-                                            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium min-h-[28px] flex items-center justify-center">
+                                        <div className="bg-white rounded-md p-1.5 text-center border border-blue-200">
+                                            <div className="text-[10px] text-gray-500 font-medium">Night</div>
+                                            <div className="text-blue-700 font-bold text-sm">
                                                 {medicine.dosage.night || '-'}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center text-sm text-gray-600 mb-1">
-                                        <Clock className="w-4 h-4 mr-1" />
-                                        {formatDate(medicine.time)}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                        <span className="font-medium">Take: </span>
-                                        {medicine.before_after_food} food
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center text-gray-600">
+                                            <Clock className="w-3 h-3 mr-1" />
+                                            {formatDate(medicine.time)}
+                                        </div>
+                                        <div className="bg-white px-2 py-0.5 rounded-full border border-blue-200">
+                                            <span className="font-semibold text-blue-700">{medicine.before_after_food}</span>
+                                            <span className="text-gray-600"> food</span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -76,49 +78,52 @@ export const PrescriptionWindow = ({ prescription, isRecent = false }: { prescri
 
                         {/* Checkups */}
                         {prescription.checkups && prescription.checkups.length > 0 && (
-                            <div className="space-y-2">
-                                <h4 className="font-medium text-gray-800 flex items-center">
-                                    <Stethoscope className="w-4 h-4 mr-2" />
-                                    Recommended Checkups
+                            <div className="space-y-1.5">
+                                <h4 className="font-semibold text-gray-800 text-xs flex items-center">
+                                    <Stethoscope className="w-3.5 h-3.5 mr-1.5" />
+                                    Recommended Tests
                                 </h4>
                                 {prescription.checkups.map((checkup) => (
-                                    <div key={checkup.id} className="flex items-center justify-between bg-amber-50 p-3 rounded-lg">
-                                        <span className="text-sm text-gray-700">{checkup.name}</span>
+                                    <div key={checkup.id} className="flex items-center justify-between bg-amber-50 p-2 rounded-md border border-amber-200">
+                                        <span className="text-xs text-gray-700 font-medium">{checkup.name}</span>
                                         <Button
                                             size="sm"
                                             variant={completedCheckups[checkup.id] || checkup.completed ? "default" : "outline"}
                                             onClick={() => toggleCheckup(checkup.id)}
-                                            className="h-8"
+                                            className="h-6 px-2 text-xs"
                                         >
-                                            <Check className="w-4 h-4 mr-1" />
-                                            {completedCheckups[checkup.id] || checkup.completed ? 'Done' : 'Mark Done'}
+                                            <Check className="w-3 h-3 mr-1" />
+                                            {completedCheckups[checkup.id] || checkup.completed ? 'Done' : 'Mark'}
                                         </Button>
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        <Separator />
-
-                        {/* Prescription Details */}
-                        <div className="bg-green-50 p-3 rounded-lg">
-                            <h4 className="font-medium text-gray-800 mb-2">Prescription Details</h4>
-                            <div className="space-y-1 text-sm">
-                                <p className="text-gray-600">Prescription ID: {prescription.id}</p>
-                                <p className="text-gray-600">Date: {formatDate(prescription.prescription_date)}</p>
-                                {prescription.prescription_text && (
-                                    <p className="text-gray-600">Notes: {prescription.prescription_text}</p>
-                                )}
-                            </div>
-                        </div>
-                        <Separator />
-                        <div className="bg-green-50 p-3 rounded-lg">
-                            <h4 className="font-medium text-gray-800 mb-2">Doctor Details</h4>
-                            <div className="space-y-1 text-sm">
-                                <p className="text-gray-600">Name: {prescription.doctor.name}</p>
-                                <p className="text-gray-600">Specialization: {prescription.doctor.specialization}</p>
-                                <p className="text-gray-600">Hospital: {prescription.doctor.hospital}</p>
-                                <p className="text-gray-600">Experience: {prescription.doctor.experience}   </p>
+                        {/* Prescription & Doctor Details - Combined */}
+                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-3 rounded-lg border border-emerald-200">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <h4 className="font-semibold text-gray-800 text-xs mb-1.5">Prescription</h4>
+                                    <div className="space-y-0.5 text-[11px]">
+                                        <p className="text-gray-600 truncate">ID: {prescription.id.slice(0, 8)}...</p>
+                                        <p className="text-gray-600">{formatDate(prescription.prescription_date)}</p>
+                                        {prescription.prescription_text && (
+                                            <p className="text-gray-600 line-clamp-2">{prescription.prescription_text}</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-gray-800 text-xs mb-1.5">Doctor</h4>
+                                    <div className="space-y-0.5 text-[11px]">
+                                        <p className="text-gray-900 font-medium line-clamp-1">Dr. {prescription.doctor.name}</p>
+                                        <p className="text-gray-600 line-clamp-1">{prescription.doctor.specialization}</p>
+                                        <p className="text-gray-600 line-clamp-1">{prescription.doctor.hospital}</p>
+                                        {prescription.doctor.experience && (
+                                            <p className="text-gray-600">{prescription.doctor.experience} yrs exp</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

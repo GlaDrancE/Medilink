@@ -25,9 +25,6 @@ import { useNavigate } from 'react-router-dom';
 import { useRouter } from 'next/navigation';
 import PatientHome from '@/components/patient/PatientHome';
 import PatientPrescription from '@/components/patient/PatientPrescription';
-import PatientHeader from '@/components/patient/PatientHeader';
-import PatientFooter from '@/components/patient/PatientFooter';
-import PatientAccount from '@/components/patient/PatientAccount';
 import TakePicture from '@/components/patient/TakePicture';
 import { usePatientActiveTab } from '@/hooks/patientActiveTab';
 import { usePatient } from '@/hooks/usePatient';
@@ -85,18 +82,25 @@ const MedicalDashboard = () => {
 
 
     if (!patient) {
-        return <div>Loading...</div>
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-gray-600 font-medium">Loading your profile...</p>
+                </div>
+            </div>
+        )
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
-
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 pb-20">
             {/* Main Content */}
-            <div className="p-4">
-                {activeTab === 'home' && <PatientHome patient={patient} />}
-                {activeTab === 'prescriptions' && <PatientPrescription patient={patient} prescriptions={prescriptions} />}
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+                <div className="space-y-6">
+                    {activeTab === 'home' && <PatientHome patient={patient} />}
+                    {activeTab === 'prescriptions' && <PatientPrescription patient={patient} prescriptions={prescriptions} />}
+                </div>
             </div>
-
         </div>
     );
 };
