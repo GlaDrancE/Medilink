@@ -292,7 +292,7 @@ export default function DoctorDashboard() {
                     <div className="bg-white rounded-md border shadow-sm p-4 text-center">
                         <div className="text-2xl font-bold text-blue-600">12</div>
                         <div className="text-sm text-gray-600">Patients This Month</div>
-                        <SubscriptionGate
+                        {/* <SubscriptionGate
                             feature="NEW_PATIENT"
                             fallback={
                                 <div className="text-xs text-gray-400 mt-1">
@@ -303,12 +303,12 @@ export default function DoctorDashboard() {
                             <div className="text-xs text-green-600 mt-1">
                                 Unlimited with Premium
                             </div>
-                        </SubscriptionGate>
+                        </SubscriptionGate> */}
                     </div>
                     <div className="bg-white rounded-md border shadow-sm p-4 text-center">
                         <div className="text-2xl font-bold text-green-600">45</div>
                         <div className="text-sm text-gray-600">Prescriptions Created</div>
-                        <SubscriptionGate
+                        {/* <SubscriptionGate
                             feature="CREATE_PRESCRIPTION"
                             fallback={
                                 <div className="text-xs text-gray-400 mt-1">
@@ -319,12 +319,12 @@ export default function DoctorDashboard() {
                             <div className="text-xs text-green-600 mt-1">
                                 Digital prescriptions
                             </div>
-                        </SubscriptionGate>
+                        </SubscriptionGate> */}
                     </div>
                     <div className="bg-white rounded-md border shadow-sm p-4 text-center">
                         <div className="text-2xl font-bold text-purple-600">23</div>
                         <div className="text-sm text-gray-600">Reminders Sent</div>
-                        <SubscriptionGate
+                        {/* <SubscriptionGate
                             feature="SEND_REMINDER"
                             fallback={
                                 <div className="text-xs text-gray-400 mt-1">
@@ -335,7 +335,7 @@ export default function DoctorDashboard() {
                             <div className="text-xs text-green-600 mt-1">
                                 Automated reminders
                             </div>
-                        </SubscriptionGate>
+                        </SubscriptionGate> */}
                     </div>
                     <div className="bg-white rounded-md border shadow-sm p-4 text-center">
                         <div className="text-2xl font-bold text-orange-600">2.5h</div>

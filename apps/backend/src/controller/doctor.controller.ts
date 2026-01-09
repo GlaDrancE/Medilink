@@ -13,8 +13,10 @@ export const getDoctorById = async (req: Request, res: Response) => {
                 id: id as string
             }
         })
-        if (!doctor) res.status(404).json({ message: "Doctor not found" });
-        res.status(200).json(doctor);
+        if (!doctor) {
+            return res.status(404).json({ message: "Doctor not found" });
+        }
+        return res.status(200).json(doctor);
     } catch (error) {
         console.log(error)
         res.status(500).json({ error: (error as Error).message });
@@ -35,9 +37,9 @@ export const getAllDoctors = async (_req: Request, res: Response) => {
 export const updateDoctor = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        const doctor = await prisma.doctor.update({
-            where: { id },
-            data: {
+        const doctor = await prisma.doctor.upsert({
+            where: { id: id as string },
+            update: {
                 address: req.body.clinic_address,
                 bio: req.body.bio,
                 experience: req.body.years_of_experience,
@@ -49,6 +51,25 @@ export const updateDoctor = async (req: Request, res: Response) => {
                 consultation_type: req.body.consultation_type,
                 qualifications: req.body.qualifications,
             },
+            create: {
+                id: id as string,
+                primary_email_address_id: req.body.primary_email_address_id,
+                medical_registration_number: req.body.medical_registration_number,
+                name: req.body.clinic_name,
+                username: req.body.username,
+                email: req.body.email,
+                password: req.body.password,
+                address: req.body.clinic_address,
+                bio: req.body.bio,
+                experience: req.body.years_of_experience,
+                hospital: req.body.clinic_name,
+                license_number: req.body.license_number,
+                specialization: req.body.specialization,
+                phone: req.body.clinic_phone_number,
+                consultation_fees: Number(req.body.consultation_fees),
+                consultation_type: req.body.consultation_type,
+                qualifications: req.body.qualifications,
+            }
         });
         res.status(200).json(doctor);
     } catch (error) {
