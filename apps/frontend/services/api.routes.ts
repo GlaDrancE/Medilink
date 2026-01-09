@@ -36,7 +36,7 @@ export const registerPatient = async (data: Patient) => {
     try {
         const response = await api.post("/auth/patient/register", data)
         localStorage.setItem("token", response.data.token)
-        return response.data;
+        return response;
     } catch (error) {
         throw error;
     }

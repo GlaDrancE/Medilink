@@ -100,32 +100,29 @@ export default function PatientAuthPage() {
         setIsCreating(true);
         setError('');
 
-        try {
-            const patientData: Patient = {
-                id: "",
-                is_active: true,
-                name: newPatient.name,
-                age: Number(newPatient.age),
-                weight: Number(newPatient.weight),
-                height: Number(newPatient.height),
-                email: newPatient.email || undefined,
-                gender: newPatient.gender,
-                phone: newPatient.phone
+        const patientData: Patient = {
+            id: "",
+            is_active: true,
+            name: newPatient.name,
+            age: Number(newPatient.age),
+            weight: Number(newPatient.weight),
+            height: Number(newPatient.height),
+            email: newPatient.email || undefined,
+            gender: newPatient.gender,
+            phone: newPatient.phone
 
-            };
+        };
 
-            const response = await registerPatient(patientData);
-            const createdPatient = response.data;
+        const response = await registerPatient(patientData);
+        const createdPatient = response.data;
 
+        if (response.status === 201) {
             setSuccess('Patient created successfully! Logging in...');
             setShowCreateModal(false);
-
-            handlePatientLogin(createdPatient.token!);
-        } catch (error: any) {
-            console.error('Create error:', error);
-            setError(error.response?.data?.message || 'Failed to create patient');
-        } finally {
-            setIsCreating(false);
+            localStorage.setItem('token', createdPatient.token as string);
+            router.push('/dashboard/patient');
+        } else {
+            console.log(response)
         }
     };
 

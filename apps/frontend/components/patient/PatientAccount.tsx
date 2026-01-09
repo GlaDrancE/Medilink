@@ -41,10 +41,10 @@ const PatientAccount = ({ patient }: { patient: Patient }) => {
         const heightInMeters = height / 100;
         const bmi = weight / (heightInMeters * heightInMeters);
         const bmiValue = parseFloat(bmi.toFixed(1));
-        
+
         let status = 'Normal';
         let color = 'emerald';
-        
+
         if (bmiValue < 18.5) {
             status = 'Underweight';
             color = 'blue';
@@ -58,7 +58,7 @@ const PatientAccount = ({ patient }: { patient: Patient }) => {
             status = 'Obese';
             color = 'red';
         }
-        
+
         return { value: bmiValue, status, color };
     };
 
@@ -232,12 +232,11 @@ const PatientAccount = ({ patient }: { patient: Patient }) => {
                 </Card>
 
                 {/* BMI Card */}
-                <Card className={`shadow-lg border-l-4 ${
-                    bmi.color === 'emerald' ? 'border-l-emerald-500' : 
-                    bmi.color === 'blue' ? 'border-l-blue-500' :
-                    bmi.color === 'amber' ? 'border-l-amber-500' :
-                    'border-l-red-500'
-                }`}>
+                <Card className={`shadow-lg border-l-4 ${bmi.color === 'emerald' ? 'border-l-emerald-500' :
+                        bmi.color === 'blue' ? 'border-l-blue-500' :
+                            bmi.color === 'amber' ? 'border-l-amber-500' :
+                                'border-l-red-500'
+                    }`}>
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -246,7 +245,7 @@ const PatientAccount = ({ patient }: { patient: Patient }) => {
                                     <h3 className="text-lg font-bold text-gray-900">Body Mass Index (BMI)</h3>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-4">Your BMI indicates you are in the <span className={`font-semibold text-${bmi.color}-600`}>{bmi.status}</span> range</p>
-                                
+
                                 <div className="flex items-baseline gap-3">
                                     <span className="text-4xl font-bold text-gray-900">{bmi.value}</span>
                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-${bmi.color}-100 text-${bmi.color}-700`}>
@@ -254,7 +253,7 @@ const PatientAccount = ({ patient }: { patient: Patient }) => {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             {/* BMI Scale */}
                             <div className="hidden md:block">
                                 <div className="space-y-2">
