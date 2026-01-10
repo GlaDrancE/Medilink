@@ -468,7 +468,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         phone: phoneNumber,
                         name: patient.name || '',
                         age: Number(patient.age) || 0,
-                        gender: patient.gender || 'Male',
+                        gender: patient.gender || 'male',
                         weight: Number(patient.weight) || 0,
                         height: Number(patient.height) || 0,
                         is_active: true,
@@ -965,7 +965,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                         />
                                         <Select
                                             label="Gender *"
-                                            value={formData.gender}
+                                            value={formData.gender || 'male'}
                                             onChange={(e) => updateFormData('gender', e.target.value)}
                                             options={genderOptions}
                                             placeholder="Select gender"
