@@ -1,23 +1,30 @@
 "use client"
 import PatientFooter from "@/components/patient/PatientFooter";
 import PatientHeader from "@/components/patient/PatientHeader";
+import UploadLoader from "@/components/patient/UploadLoader";
 import { usePatientActiveTab } from "@/hooks/patientActiveTab";
 import { useHandleCapture } from "@/hooks/useHandleCapture";
 import { usePatient } from "@/hooks/usePatient";
 import { useAIAnalysis } from "@/hooks/useAIAnalysis";
 import { Patient } from "@/types";
 import AIAnalysisCard from "@/components/AIAnalysisCard";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const PatientLayout = ({ children }: { children: React.ReactNode }) => {
     const { patient, setPatient } = usePatient();
     const { activeTab, setActiveTab } = usePatientActiveTab();
     const { currentAnalysis, isAnalyzing, setCurrentAnalysis, setIsAnalyzing, addToHistory, clearCurrentAnalysis } = useAIAnalysis();
+    const [uploadStage, setUploadStage] = useState<'uploading' | 'analyzing' | 'complete'>('uploading');
+    const [showLoader, setShowLoader] = useState(false);
 
     const handleCapture = async (file: File, dataUrl: string, type: string) => {
         setIsAnalyzing(true);
+        setShowLoader(true);
         try {
-            const response = await useHandleCapture(file, dataUrl, type)
+            const response = await useHandleCapture(file, dataUrl, type, (stage) => {
+                setUploadStage(stage);
+            });
+            
             if (response) {
                 // Update patient with new document
                 const newDocument = response.document || response.data;
@@ -32,9 +39,15 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
                     setCurrentAnalysis(response.aiAnalysis);
                     addToHistory(newDocument.id, response.aiAnalysis);
                 }
+
+                // Show complete state briefly before hiding loader
+                setTimeout(() => {
+                    setShowLoader(false);
+                }, 2000);
             }
         } catch (error) {
             console.error("Error uploading document:", error);
+            setShowLoader(false);
         } finally {
             setIsAnalyzing(false);
         }
@@ -53,17 +66,22 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <>
-            {patient && <PatientHeader patient={patient} />}
+            {/* Upload Progress Loader */}
+            <UploadLoader isUploading={showLoader} stage={uploadStage} />
             
-            {/* AI Analysis Card - Show when available */}
-            {(currentAnalysis || isAnalyzing) && (
-                <div className="max-w-4xl mx-auto px-4 pt-4">
-                    <AIAnalysisCard analysis={currentAnalysis} isLoading={isAnalyzing} />
-                </div>
-            )}
-            
-            {children}
-            <PatientFooter activeTab={activeTab} setActiveTab={setActiveTab} onCapture={handleCapture} />
+            <div className={`${showLoader ? 'pt-16' : ''} transition-all duration-300`}>
+                {patient && <PatientHeader patient={patient} />}
+                
+                {/* AI Analysis Card - Show when available */}
+                {(currentAnalysis || isAnalyzing) && (
+                    <div className="max-w-4xl mx-auto px-4 pt-4">
+                        <AIAnalysisCard analysis={currentAnalysis} isLoading={isAnalyzing} />
+                    </div>
+                )}
+                
+                {children}
+                <PatientFooter activeTab={activeTab} setActiveTab={setActiveTab} onCapture={handleCapture} />
+            </div>
         </>
     )
 }
