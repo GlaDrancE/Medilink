@@ -2,6 +2,7 @@
 import PatientFooter from "@/components/patient/PatientFooter";
 import PatientHeader from "@/components/patient/PatientHeader";
 import UploadLoader from "@/components/patient/UploadLoader";
+import LanguageSelector from "@/components/LanguageSelector";
 import { usePatientActiveTab } from "@/hooks/patientActiveTab";
 import { useHandleCapture } from "@/hooks/useHandleCapture";
 import { usePatient } from "@/hooks/usePatient";
@@ -68,6 +69,11 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
         <>
             {/* Upload Progress Loader */}
             <UploadLoader isUploading={showLoader} stage={uploadStage} />
+
+            {/* Language Selector - Fixed Position */}
+            <div className="fixed top-4 right-4 z-9999999999">
+                <LanguageSelector />
+            </div>
 
             <div className={`${showLoader ? 'pt-16' : ''} transition-all duration-300`}>
                 {patient && <PatientHeader patient={patient} />}

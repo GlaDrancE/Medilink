@@ -28,7 +28,7 @@ const AIAnalysisCard: React.FC<AIAnalysisCardProps> = ({ analysis, isLoading = f
             <Card className="border-l-4 border-l-purple-500 shadow-lg animate-pulse">
                 <CardHeader className="pb-3">
                     <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-purple-600 animate-pulse" />
+                        <Sparkles className="w-5 h-5 text-purple-600 animate-pulse notranslate" aria-hidden="true" />
                         <CardTitle className="text-base font-bold text-gray-900">
                             AI Analysis in Progress...
                         </CardTitle>
@@ -49,28 +49,28 @@ const AIAnalysisCard: React.FC<AIAnalysisCardProps> = ({ analysis, isLoading = f
         return null;
     }
 
-    const confidenceColor = 
+    const confidenceColor =
         analysis.confidence >= 0.8 ? 'text-green-600 bg-green-100' :
-        analysis.confidence >= 0.6 ? 'text-amber-600 bg-amber-100' :
-        'text-red-600 bg-red-100';
+            analysis.confidence >= 0.6 ? 'text-amber-600 bg-amber-100' :
+                'text-red-600 bg-red-100';
 
     const confidenceText =
         analysis.confidence >= 0.8 ? 'High Confidence' :
-        analysis.confidence >= 0.6 ? 'Medium Confidence' :
-        'Low Confidence';
+            analysis.confidence >= 0.6 ? 'Medium Confidence' :
+                'Low Confidence';
 
     return (
         <Card className="border-l-4 border-l-purple-500 shadow-lg bg-gradient-to-r from-purple-50 to-indigo-50">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-                            <Brain className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center notranslate">
+                            <Brain className="w-5 h-5 text-white" aria-hidden="true" />
                         </div>
                         <div>
                             <CardTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 AI Analysis
-                                <Sparkles className="w-4 h-4 text-purple-600" />
+                                <Sparkles className="w-4 h-4 text-purple-600 notranslate" aria-hidden="true" />
                             </CardTitle>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs text-gray-600 capitalize">{analysis.documentType}</span>

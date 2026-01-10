@@ -47,11 +47,11 @@ const RecordsPage = () => {
     const getTypeIcon = (type: string) => {
         switch (type) {
             case 'prescription':
-                return <Stethoscope className="w-5 h-5" />
+                return <Stethoscope className="w-5 h-5 notranslate" aria-hidden="true" />
             case 'lab':
-                return <FlaskConical className="w-5 h-5" />
+                return <FlaskConical className="w-5 h-5 notranslate" aria-hidden="true" />
             default:
-                return <FileText className="w-5 h-5" />
+                return <FileText className="w-5 h-5 notranslate" aria-hidden="true" />
         }
     }
 
@@ -86,7 +86,7 @@ const RecordsPage = () => {
                 {patient.prescriptions && patient.prescriptions.length > 0 && (
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                            <Stethoscope className="w-6 h-6 text-blue-600" />
+                            <Stethoscope className="w-6 h-6 text-blue-600 notranslate" aria-hidden="true" />
                             <h2 className="text-xl font-semibold text-gray-800">Prescriptions</h2>
                             <span className="text-sm text-gray-500">({patient.prescriptions.length})</span>
                         </div>
@@ -108,7 +108,7 @@ const RecordsPage = () => {
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Calendar className="w-4 h-4 text-gray-500" />
+                                                <Calendar className="w-4 h-4 text-gray-500 notranslate" aria-hidden="true" />
                                                 <span className="text-sm text-gray-500">
                                                     {expandedPrescription === index ? 'Hide' : 'View'}
                                                 </span>
@@ -133,7 +133,7 @@ const RecordsPage = () => {
                 {patient.documents && patient.documents.length > 0 ? (
                     <div className="space-y-6">
                         <div className="flex items-center gap-2">
-                            <FileText className="w-6 h-6 text-blue-600" />
+                            <FileText className="w-6 h-6 text-blue-600 notranslate" aria-hidden="true" />
                             <h2 className="text-xl font-semibold text-gray-800">Documents</h2>
                             <span className="text-sm text-gray-500">({patient.documents.length})</span>
                         </div>
@@ -205,7 +205,7 @@ const RecordsPage = () => {
                                                                     </p>
                                                                     {hasAIAnalysis && (
                                                                         <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium flex items-center gap-1">
-                                                                            <Brain className="w-3 h-3" />
+                                                                            <Brain className="w-3 h-3 notranslate" aria-hidden="true" />
                                                                             AI Analyzed
                                                                         </span>
                                                                     )}
@@ -224,7 +224,7 @@ const RecordsPage = () => {
                                                             {hasAIAnalysis && doc.ai_summary && (
                                                                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
                                                                     <div className="flex items-start gap-2">
-                                                                        <Sparkles className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                                                                        <Sparkles className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0 notranslate" aria-hidden="true" />
                                                                         <div className="flex-1">
                                                                             <p className="text-xs font-semibold text-purple-900 mb-1">AI Summary</p>
                                                                             <p className="text-xs text-purple-700 line-clamp-2">
@@ -241,7 +241,7 @@ const RecordsPage = () => {
                                                                     size="sm"
                                                                     onClick={() => handleViewImage(doc.file_url)}
                                                                 >
-                                                                    <Eye className="w-4 h-4 mr-1" />
+                                                                    <Eye className="w-4 h-4 mr-1 notranslate" aria-hidden="true" />
                                                                     View
                                                                 </Button>
                                                                 <Button
@@ -249,7 +249,7 @@ const RecordsPage = () => {
                                                                     size="sm"
                                                                     onClick={() => handleDownload(doc.file_url, doc.name)}
                                                                 >
-                                                                    <Download className="w-4 h-4 mr-1" />
+                                                                    <Download className="w-4 h-4 mr-1 notranslate" aria-hidden="true" />
                                                                     Download
                                                                 </Button>
                                                                 {hasAIAnalysis && (
@@ -261,17 +261,17 @@ const RecordsPage = () => {
                                                                         )}
                                                                         className="border-purple-300 text-purple-600 hover:bg-purple-50"
                                                                     >
-                                                                        <Brain className="w-4 h-4 mr-1" />
+                                                                        <Brain className="w-4 h-4 mr-1 notranslate" aria-hidden="true" />
                                                                         {expandedDocumentAI === docId ? (
-                                                                            <>
-                                                                                <ChevronUp className="w-3 h-3 ml-1" />
-                                                                                Hide Analysis
-                                                                            </>
+                                                                            <span className="flex items-center" key="hide-analysis">
+                                                                                <ChevronUp className="w-3 h-3 ml-1 notranslate" aria-hidden="true" />
+                                                                                <span className="ml-1">Hide Analysis</span>
+                                                                            </span>
                                                                         ) : (
-                                                                            <>
-                                                                                <ChevronDown className="w-3 h-3 ml-1" />
-                                                                                View Full Analysis
-                                                                            </>
+                                                                            <span className="flex items-center" key="view-analysis">
+                                                                                <ChevronDown className="w-3 h-3 ml-1 notranslate" aria-hidden="true" />
+                                                                                <span className="ml-1">View Full Analysis</span>
+                                                                            </span>
                                                                         )}
                                                                     </Button>
                                                                 )}
@@ -281,7 +281,7 @@ const RecordsPage = () => {
 
                                                     {/* Expanded AI Analysis */}
                                                     {expandedDocumentAI === docId && aiAnalysis && (
-                                                        <div className="border-t border-gray-200 p-4 bg-gray-50">
+                                                        <div key={`ai-${docId}`} className="border-t border-gray-200 p-4 bg-gray-50">
                                                             <AIAnalysisCard analysis={aiAnalysis} />
                                                         </div>
                                                     )}
@@ -296,7 +296,7 @@ const RecordsPage = () => {
                 ) : (
                     <Card>
                         <CardContent className="py-8 text-center">
-                            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3 notranslate" aria-hidden="true" />
                             <p className="text-gray-600">No documents found</p>
                         </CardContent>
                     </Card>
@@ -307,7 +307,7 @@ const RecordsPage = () => {
                     (!patient.documents || patient.documents.length === 0) && (
                         <Card>
                             <CardContent className="py-12 text-center">
-                                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4 notranslate" aria-hidden="true" />
                                 <h3 className="text-lg font-semibold text-gray-800 mb-2">No Records Found</h3>
                                 <p className="text-gray-600">You don't have any prescriptions or documents yet.</p>
                             </CardContent>

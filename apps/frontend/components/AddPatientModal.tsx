@@ -12,7 +12,7 @@ import type { Document as PatientDocument, MedicineEntry, Patient, Prescriptions
 import { createPatient, searchPatientByPhone } from '@/services/api.routes';
 import { validatePhoneNumber, formatPhoneNumber } from '@/lib/validation';
 import { useUser } from '@clerk/nextjs';
-import { X, Pill, FlaskRound, Stethoscope, Calendar as CalendarIcon, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { X, Pill, FlaskRound, Stethoscope, Calendar as CalendarIcon, ChevronDown, ChevronUp, FileText, Edit2, Save } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -87,6 +87,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     const [hospitalOptions, setHospitalOptions] = useState<any[]>([]);
     const [doctorOptions, setDoctorOptions] = useState<any[]>([]);
     const [patient, setPatient] = useState<Patient | null>(null)
+    const [isEditingBasicInfo, setIsEditingBasicInfo] = useState(false);
     const { user } = useUser();
     const { doctor } = useDoctor();
 
@@ -658,6 +659,8 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         setShowConditionDropdown(false);
         setFilteredConditions([]);
         setCurrentSearchTerm('');
+        setIsEditingBasicInfo(false);
+        setPatient(null);
         onClose();
     };
 
@@ -934,14 +937,37 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
 
                                 {/* Basic Information Section */}
                                 <div>
-                                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </div>
-                                        Basic Information
-                                    </h4>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-lg font-medium text-gray-900 flex items-center">
+                                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                            </div>
+                                            Basic Information
+                                        </h4>
+                                        {patient && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setIsEditingBasicInfo(!isEditingBasicInfo)}
+                                                className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors"
+                                            >
+                                                {isEditingBasicInfo ? (
+                                                    <>
+                                                        <Save className="w-4 h-4" />
+                                                        Save
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Edit2 className="w-4 h-4" />
+                                                        Edit
+                                                    </>
+                                                )}
+                                            </Button>
+                                        )}
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Input
                                             label="Patient Name *"
@@ -950,7 +976,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                             onChange={(e) => updateFormData('name', e.target.value)}
                                             placeholder="Enter patient's full name"
                                             error={errors.name}
-                                            disabled={loading}
+                                            disabled={loading || (!!patient && !isEditingBasicInfo)}
                                         />
                                         <Input
                                             label="Age *"
@@ -959,7 +985,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                             onChange={(e) => updateFormData('age', e.target.value)}
                                             placeholder="Enter age"
                                             error={errors.age}
-                                            disabled={loading}
+                                            disabled={loading || (!!patient && !isEditingBasicInfo)}
                                             min="1"
                                             max="150"
                                         />
@@ -970,7 +996,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                             options={genderOptions}
                                             placeholder="Select gender"
                                             error={errors.gender}
-                                            disabled={loading}
+                                            disabled={loading || (!!patient && !isEditingBasicInfo)}
                                         />
                                         <Input
                                             label="Weight (kg) *"
@@ -979,7 +1005,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                                             onChange={(e) => updateFormData('weight', e.target.value)}
                                             placeholder="Enter weight in kg"
                                             error={errors.weight}
-                                            disabled={loading}
+                                            disabled={loading || (!!patient && !isEditingBasicInfo)}
                                             min="0.1"
                                             step="0.1"
                                         />
