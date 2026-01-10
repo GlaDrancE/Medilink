@@ -2,7 +2,7 @@ import { Doctor, Patient, Prescriptions } from "@/types";
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1",
+    baseURL: "https://medilink-h77v.onrender.com/api/v1",
     timeout: 60000, // 60 seconds for AI analysis
 })
 api.interceptors.request.use(async (config) => {

@@ -468,7 +468,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         phone: phoneNumber,
                         name: patient.name || '',
                         age: Number(patient.age) || 0,
-                        gender: patient.gender || '',
+                        gender: patient.gender || 'Male',
                         weight: Number(patient.weight) || 0,
                         height: Number(patient.height) || 0,
                         is_active: true,

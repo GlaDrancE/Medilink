@@ -226,51 +226,51 @@ export default function DoctorDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
             {/* Header */}
-            <header className="bg-white border-b">
+            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between py-4">
                         <div className="flex items-center space-x-3">
-                            <h1 className="text-2xl font-semibold text-gray-900">
+                            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                                 MEDILINK
                             </h1>
-                            <span className="px-2 py-0.5 rounded text-xs border text-gray-600">
+                            <span className="px-2.5 py-1 rounded-md text-xs bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 text-blue-700 font-medium">
                                 Lite EMR
                             </span>
                         </div>
                         <div className="flex items-center space-x-4">
                             <SubscriptionStatusIndicator />
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 bg-white/60 rounded-lg px-3 py-1.5 border border-gray-200/50">
                                 <span
                                     className={
                                         connectivity === "online"
-                                            ? "inline-block w-2 h-2 rounded-full bg-green-500"
+                                            ? "inline-block w-2 h-2 rounded-full bg-green-500 shadow-sm shadow-green-500/50"
                                             : connectivity === "offline"
-                                                ? "inline-block w-2 h-2 rounded-full bg-red-500"
-                                                : "inline-block w-2 h-2 rounded-full bg-yellow-500"
+                                                ? "inline-block w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-500/50"
+                                                : "inline-block w-2 h-2 rounded-full bg-yellow-500 shadow-sm shadow-yellow-500/50"
                                     }
                                 />
-                                <span className="text-sm text-gray-600 capitalize">
+                                <span className="text-sm text-gray-700 capitalize font-medium">
                                     {connectivity}
                                 </span>
                                 {lastSyncAt && (
-                                    <span className="text-xs text-gray-400">
+                                    <span className="text-xs text-gray-500">
                                         Last sync {lastSyncAt.toLocaleTimeString()}
                                     </span>
                                 )}
                             </div>
                             <NotificationBell />
-                            <span className="text-gray-700">{user?.username}</span>
+                            <span className="text-gray-700 font-medium">{user?.username}</span>
                             <Button
                                 onClick={() => (window.location.href = "/subscription")}
                                 variant="ghost"
                                 size="sm"
-                                className="text-blue-600 hover:text-blue-700"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50/50"
                             >
                                 Manage Subscription
                             </Button>
-                            <Button onClick={handleLogout} variant="outline" size="sm">
+                            <Button onClick={handleLogout} variant="outline" size="sm" className="border-gray-300 hover:bg-gray-50">
                                 Logout
                             </Button>
                         </div>
@@ -289,9 +289,9 @@ export default function DoctorDashboard() {
 
                 {/* Usage Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-md border shadow-sm p-4 text-center">
-                        <div className="text-2xl font-bold text-blue-600">12</div>
-                        <div className="text-sm text-gray-600">Patients This Month</div>
+                    <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-lg border border-blue-100/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5 text-center">
+                        <div className="text-3xl font-bold bg-gradient-to-br from-blue-600 to-blue-500 bg-clip-text text-transparent">12</div>
+                        <div className="text-sm text-gray-600 font-medium mt-1">Patients This Month</div>
                         {/* <SubscriptionGate
                             feature="NEW_PATIENT"
                             fallback={
@@ -305,9 +305,9 @@ export default function DoctorDashboard() {
                             </div>
                         </SubscriptionGate> */}
                     </div>
-                    <div className="bg-white rounded-md border shadow-sm p-4 text-center">
-                        <div className="text-2xl font-bold text-green-600">45</div>
-                        <div className="text-sm text-gray-600">Prescriptions Created</div>
+                    <div className="bg-gradient-to-br from-white to-green-50/50 rounded-lg border border-green-100/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5 text-center">
+                        <div className="text-3xl font-bold bg-gradient-to-br from-green-600 to-green-500 bg-clip-text text-transparent">45</div>
+                        <div className="text-sm text-gray-600 font-medium mt-1">Prescriptions Created</div>
                         {/* <SubscriptionGate
                             feature="CREATE_PRESCRIPTION"
                             fallback={
@@ -321,9 +321,9 @@ export default function DoctorDashboard() {
                             </div>
                         </SubscriptionGate> */}
                     </div>
-                    <div className="bg-white rounded-md border shadow-sm p-4 text-center">
-                        <div className="text-2xl font-bold text-purple-600">23</div>
-                        <div className="text-sm text-gray-600">Reminders Sent</div>
+                    <div className="bg-gradient-to-br from-white to-purple-50/50 rounded-lg border border-purple-100/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5 text-center">
+                        <div className="text-3xl font-bold bg-gradient-to-br from-purple-600 to-purple-500 bg-clip-text text-transparent">23</div>
+                        <div className="text-sm text-gray-600 font-medium mt-1">Reminders Sent</div>
                         {/* <SubscriptionGate
                             feature="SEND_REMINDER"
                             fallback={
@@ -337,10 +337,10 @@ export default function DoctorDashboard() {
                             </div>
                         </SubscriptionGate> */}
                     </div>
-                    <div className="bg-white rounded-md border shadow-sm p-4 text-center">
-                        <div className="text-2xl font-bold text-orange-600">2.5h</div>
-                        <div className="text-sm text-gray-600">Time Saved</div>
-                        <div className="text-xs text-green-600 mt-1">With automation</div>
+                    <div className="bg-gradient-to-br from-white to-orange-50/50 rounded-lg border border-orange-100/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5 text-center">
+                        <div className="text-3xl font-bold bg-gradient-to-br from-orange-600 to-orange-500 bg-clip-text text-transparent">2.5h</div>
+                        <div className="text-sm text-gray-600 font-medium mt-1">Time Saved</div>
+                        <div className="text-xs text-green-600 mt-2 font-medium">With automation</div>
                     </div>
                 </div>
 
@@ -357,34 +357,34 @@ export default function DoctorDashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Today's Appointments */}
-                    <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-2">
-                        <div className="flex items-center justify-between mb-3">
+                    <section className="bg-gradient-to-br from-white via-white to-blue-50/30 rounded-lg border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5 lg:col-span-2">
+                        <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-semibold text-gray-900">
                                 Today's Appointments
                             </h3>
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-gray-600 bg-gray-100/70 px-3 py-1 rounded-full font-medium">
                                 {todaysAppointments.length} total
                             </span>
                         </div>
-                        <div className="divide-y">
+                        <div className="divide-y divide-gray-100">
                             {todaysAppointments.map((a, idx) => (
                                 <div
                                     key={idx}
-                                    className="py-3 flex items-center justify-between"
+                                    className="py-3.5 flex items-center justify-between hover:bg-blue-50/30 -mx-2 px-2 rounded-md transition-colors duration-150"
                                 >
                                     <div className="flex items-center space-x-4">
-                                        <span className="text-sm font-medium text-gray-900 w-16">
+                                        <span className="text-sm font-semibold text-gray-900 w-16 bg-gray-50 px-2 py-1 rounded">
                                             {a.time}
                                         </span>
-                                        <span className="text-sm text-gray-700">{a.patient}</span>
+                                        <span className="text-sm text-gray-700 font-medium">{a.patient}</span>
                                     </div>
                                     <span
                                         className={
                                             a.status === "Checked-in"
-                                                ? "px-2 py-0.5 text-xs rounded bg-green-100 text-green-700"
+                                                ? "px-3 py-1 text-xs rounded-full bg-gradient-to-r from-green-100 to-green-50 text-green-700 font-medium border border-green-200/50"
                                                 : a.status === "Waiting"
-                                                    ? "px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700"
-                                                    : "px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700"
+                                                    ? "px-3 py-1 text-xs rounded-full bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-700 font-medium border border-yellow-200/50"
+                                                    : "px-3 py-1 text-xs rounded-full bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 font-medium border border-gray-200/50"
                                         }
                                     >
                                         {a.status}
@@ -395,8 +395,8 @@ export default function DoctorDashboard() {
                     </section>
 
                     {/* Quick Actions */}
-                    <section className="bg-white rounded-md border shadow-sm p-4">
-                        <div className="flex items-center justify-between mb-3">
+                    <section className="bg-gradient-to-br from-white via-white to-indigo-50/30 rounded-lg border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5">
+                        <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-semibold text-gray-900">
                                 Quick Actions
                             </h3>
@@ -500,15 +500,15 @@ export default function DoctorDashboard() {
                     </section>
 
                     {/* Upcoming Follow-Ups */}
-                    <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-2">
-                        <div className="flex items-center justify-between mb-3">
+                    <section className="bg-gradient-to-br from-white via-white to-green-50/30 rounded-lg border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5 lg:col-span-2">
+                        <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-semibold text-gray-900">
                                 Upcoming Follow-Ups
                             </h3>
                             <SubscriptionGate
                                 feature="SEND_REMINDER"
                                 fallback={
-                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    <span className="text-xs text-gray-600 bg-gradient-to-r from-gray-100 to-gray-50 px-3 py-1.5 rounded-full border border-gray-200/50 font-medium">
                                         Premium: Auto-reminders
                                     </span>
                                 }
@@ -518,29 +518,29 @@ export default function DoctorDashboard() {
                                 </Button>
                             </SubscriptionGate>
                         </div>
-                        <div className="divide-y">
+                        <div className="divide-y divide-gray-100">
                             {upcomingFollowUps.map((u, idx) => (
                                 <div
                                     key={idx}
-                                    className="py-3 flex items-center justify-between"
+                                    className="py-3.5 flex items-center justify-between hover:bg-green-50/30 -mx-2 px-2 rounded-md transition-colors duration-150"
                                 >
                                     <div>
-                                        <p className="text-sm font-medium text-gray-900">
+                                        <p className="text-sm font-semibold text-gray-900">
                                             {u.name}
                                         </p>
-                                        <p className="text-xs text-gray-600">{u.reason}</p>
+                                        <p className="text-xs text-gray-600 mt-0.5">{u.reason}</p>
                                     </div>
                                     <div className="text-right">
-                                        <span className="text-sm text-gray-700">{u.date}</span>
+                                        <span className="text-sm text-gray-700 font-medium bg-gray-50 px-2 py-1 rounded">{u.date}</span>
                                         <SubscriptionGate
                                             feature="SEND_REMINDER"
                                             fallback={
-                                                <div className="text-xs text-gray-400 mt-1">
+                                                <div className="text-xs text-gray-500 mt-1">
                                                     Manual reminder needed
                                                 </div>
                                             }
                                         >
-                                            <div className="text-xs text-green-600 mt-1">
+                                            <div className="text-xs text-green-600 mt-1 font-medium">
                                                 Auto-reminder set
                                             </div>
                                         </SubscriptionGate>
@@ -551,12 +551,12 @@ export default function DoctorDashboard() {
                     </section>
 
                     {/* Missed Appointments / No-Shows */}
-                    <section className="bg-white rounded-md border shadow-sm p-4">
-                        <div className="flex items-center justify-between mb-3">
+                    <section className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-lg border border-red-200/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5">
+                        <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-semibold text-gray-900">
                                 Missed Appointments
                             </h3>
-                            <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">
+                            <span className="px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-red-100 to-red-50 text-red-700 border border-red-200/50 font-medium">
                                 {missedAppointments.length} this week
                             </span>
                         </div>
@@ -564,31 +564,31 @@ export default function DoctorDashboard() {
                             {missedAppointments.map((m, idx) => (
                                 <div
                                     key={idx}
-                                    className="flex items-center justify-between p-2 rounded border bg-red-50"
+                                    className="flex items-center justify-between p-3 rounded-lg border border-red-200/50 bg-gradient-to-r from-red-50 to-red-50/50 hover:from-red-100/50 hover:to-red-50 transition-colors duration-150"
                                 >
-                                    <span className="text-sm text-red-800">{m.name}</span>
-                                    <span className="text-xs text-red-700">{m.date}</span>
+                                    <span className="text-sm text-red-800 font-medium">{m.name}</span>
+                                    <span className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded font-medium">{m.date}</span>
                                 </div>
                             ))}
                         </div>
                     </section>
 
                     {/* Recent Patients Summary */}
-                    <section className="bg-white rounded-md border shadow-sm p-4 lg:col-span-2">
-                        <h3 className="text-base font-semibold text-gray-900 mb-3">
+                    <section className="bg-gradient-to-br from-white via-white to-indigo-50/30 rounded-lg border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow duration-200 p-5 lg:col-span-2">
+                        <h3 className="text-base font-semibold text-gray-900 mb-4">
                             Recent Patients
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {recentPatients.map((p, idx) => (
-                                <div key={idx} className="border rounded p-3">
-                                    <p className="text-sm font-medium text-gray-900">
+                                <div key={idx} className="border border-gray-200/50 rounded-lg p-4 bg-gradient-to-br from-white to-gray-50/30 hover:shadow-sm transition-shadow duration-150">
+                                    <p className="text-sm font-semibold text-gray-900">
                                         {p.name}
                                     </p>
-                                    <p className="text-xs text-gray-600 mt-1">
+                                    <p className="text-xs text-gray-600 mt-1.5">
                                         {p.lastPrescription}
                                     </p>
                                     {p.next && (
-                                        <p className="text-xs text-gray-700 mt-2">
+                                        <p className="text-xs text-gray-700 mt-2 bg-blue-50 px-2 py-1 rounded inline-block font-medium">
                                             Next: {p.next}
                                         </p>
                                     )}
@@ -598,50 +598,50 @@ export default function DoctorDashboard() {
                     </section>
 
                     {/* Premium Features Overview */}
-                    <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-md border border-blue-200 shadow-sm p-4">
-                        <div className="flex items-center space-x-2 mb-3">
+                    <section className="bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/50 rounded-lg border border-blue-200/60 shadow-sm hover:shadow-md transition-shadow duration-200 p-5">
+                        <div className="flex items-center space-x-2 mb-4">
                             <Crown className="h-5 w-5 text-blue-600" />
                             <h3 className="text-base font-semibold text-blue-900">
                                 Premium Features
                             </h3>
                         </div>
                         <div className="space-y-3">
-                            <div className="flex items-center space-x-2 text-sm">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                <span className="text-blue-800">
+                            <div className="flex items-center space-x-3 text-sm bg-white/50 p-2 rounded-md">
+                                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
+                                <span className="text-blue-900 font-medium">
                                     Unlimited patient records
                                 </span>
                             </div>
-                            <div className="flex items-center space-x-2 text-sm">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                <span className="text-blue-800">
+                            <div className="flex items-center space-x-3 text-sm bg-white/50 p-2 rounded-md">
+                                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
+                                <span className="text-blue-900 font-medium">
                                     Digital prescription generation
                                 </span>
                             </div>
-                            <div className="flex items-center space-x-2 text-sm">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                <span className="text-blue-800">
+                            <div className="flex items-center space-x-3 text-sm bg-white/50 p-2 rounded-md">
+                                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
+                                <span className="text-blue-900 font-medium">
                                     SMS & WhatsApp reminders
                                 </span>
                             </div>
-                            <div className="flex items-center space-x-2 text-sm">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                <span className="text-blue-800">Advanced analytics</span>
+                            <div className="flex items-center space-x-3 text-sm bg-white/50 p-2 rounded-md">
+                                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
+                                <span className="text-blue-900 font-medium">Advanced analytics</span>
                             </div>
-                            <div className="flex items-center space-x-2 text-sm">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                <span className="text-blue-800">Priority support</span>
+                            <div className="flex items-center space-x-3 text-sm bg-white/50 p-2 rounded-md">
+                                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
+                                <span className="text-blue-900 font-medium">Priority support</span>
                             </div>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-blue-200">
+                        <div className="mt-4 pt-4 border-t border-blue-200/60">
                             <Button
                                 onClick={() => (window.location.href = "/subscription")}
-                                className="w-full bg-blue-600 hover:bg-blue-700"
+                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-sm"
                                 size="sm"
                             >
                                 Upgrade to Premium
                             </Button>
-                            <p className="text-xs text-center text-blue-600 mt-2">
+                            <p className="text-xs text-center text-blue-700 mt-2.5 font-medium">
                                 Starting from ₹99/month • 7-day free trial
                             </p>
                         </div>
