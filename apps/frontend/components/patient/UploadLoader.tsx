@@ -69,16 +69,15 @@ const UploadLoader: React.FC<UploadLoaderProps> = ({ isUploading, stage = 'uploa
                     }
                 }
             `}</style>
-            
+
             <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-md">
                 {/* Progress Bar */}
                 <div className="h-1 bg-gray-200/50 overflow-hidden">
-                    <div 
-                        className={`h-full ${
-                            stageInfo.color === 'blue' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
-                            stageInfo.color === 'purple' ? 'bg-gradient-to-r from-purple-500 to-purple-600' :
-                            'bg-gradient-to-r from-green-500 to-green-600'
-                        } ${stage === 'complete' ? 'w-full transition-all duration-500' : ''}`}
+                    <div
+                        className={`h-full ${stageInfo.color === 'blue' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                                stageInfo.color === 'purple' ? 'bg-gradient-to-r from-purple-500 to-purple-600' :
+                                    'bg-gradient-to-r from-green-500 to-green-600'
+                            } ${stage === 'complete' ? 'w-full transition-all duration-500' : ''}`}
                         style={stage !== 'complete' ? {
                             animation: 'progress-bar 2s ease-in-out infinite'
                         } : undefined}
@@ -88,34 +87,31 @@ const UploadLoader: React.FC<UploadLoaderProps> = ({ isUploading, stage = 'uploa
                 {/* Content */}
                 <div className="max-w-4xl mx-auto px-4 py-3">
                     <div className="flex items-center justify-center space-x-3">
-                        <div className={`${
-                            stage === 'complete' ? '' : 'animate-bounce'
-                        }`}>
-                            <Icon className={`w-5 h-5 ${
-                                stageInfo.color === 'blue' ? 'text-blue-600' :
-                                stageInfo.color === 'purple' ? 'text-purple-600' :
-                                'text-green-600'
-                            }`} />
+                        <div className={`${stage === 'complete' ? '' : 'animate-bounce'
+                            }`}>
+                            <Icon className={`w-5 h-5 ${stageInfo.color === 'blue' ? 'text-blue-600' :
+                                    stageInfo.color === 'purple' ? 'text-purple-600' :
+                                        'text-green-600'
+                                }`} />
                         </div>
-                        <p className={`text-sm font-medium ${
-                            stageInfo.color === 'blue' ? 'text-blue-900' :
-                            stageInfo.color === 'purple' ? 'text-purple-900' :
-                            'text-green-900'
-                        }`}>
+                        <p className={`text-sm font-medium ${stageInfo.color === 'blue' ? 'text-blue-900' :
+                                stageInfo.color === 'purple' ? 'text-purple-900' :
+                                    'text-green-900'
+                            }`}>
                             {stageInfo.text}
                         </p>
                         {stage !== 'complete' && (
                             <div className="flex space-x-1">
-                                <span 
-                                    className="w-1.5 h-1.5 bg-gray-400 rounded-full" 
+                                <span
+                                    className="w-1.5 h-1.5 bg-gray-400 rounded-full"
                                     style={{ animation: 'pulse-dot 1.4s ease-in-out 0s infinite' }}
                                 ></span>
-                                <span 
-                                    className="w-1.5 h-1.5 bg-gray-400 rounded-full" 
+                                <span
+                                    className="w-1.5 h-1.5 bg-gray-400 rounded-full"
                                     style={{ animation: 'pulse-dot 1.4s ease-in-out 0.2s infinite' }}
                                 ></span>
-                                <span 
-                                    className="w-1.5 h-1.5 bg-gray-400 rounded-full" 
+                                <span
+                                    className="w-1.5 h-1.5 bg-gray-400 rounded-full"
                                     style={{ animation: 'pulse-dot 1.4s ease-in-out 0.4s infinite' }}
                                 ></span>
                             </div>

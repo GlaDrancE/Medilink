@@ -24,7 +24,7 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
             const response = await useHandleCapture(file, dataUrl, type, (stage) => {
                 setUploadStage(stage);
             });
-            
+
             if (response) {
                 // Update patient with new document
                 const newDocument = response.document || response.data;
@@ -68,17 +68,17 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
         <>
             {/* Upload Progress Loader */}
             <UploadLoader isUploading={showLoader} stage={uploadStage} />
-            
+
             <div className={`${showLoader ? 'pt-16' : ''} transition-all duration-300`}>
                 {patient && <PatientHeader patient={patient} />}
-                
+
                 {/* AI Analysis Card - Show when available */}
                 {(currentAnalysis || isAnalyzing) && (
                     <div className="max-w-4xl mx-auto px-4 pt-4">
                         <AIAnalysisCard analysis={currentAnalysis} isLoading={isAnalyzing} />
                     </div>
                 )}
-                
+
                 {children}
                 <PatientFooter activeTab={activeTab} setActiveTab={setActiveTab} onCapture={handleCapture} />
             </div>
