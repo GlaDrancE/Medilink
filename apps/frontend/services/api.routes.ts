@@ -1,17 +1,20 @@
 import { Doctor, Patient, Prescriptions } from "@/types";
 import axios from "axios";
+import { getAuthToken } from "@/lib/tokenManager";
 
 const api = axios.create({
-    baseURL: "https://medilink-h77v.onrender.com/api/v1",
-    timeout: 60000, // 60 seconds for AI analysis
-})
+    // baseURL: "https://medilink-h77v.onrender.com/api/v1",
+    baseURL: "http://localhost:3000/api/v1",
+    timeout: 60000,
+});
+
 api.interceptors.request.use(async (config) => {
-    const token = localStorage.getItem("token");
+    const token = await getAuthToken();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-})
+});
 
 const register = async (phone: string) => {
     try {
@@ -184,6 +187,17 @@ export const analyzeDocumentBatch = async (documents: Array<{ imageData: string;
     } catch (error) {
         console.error("Batch AI Analysis error:", error);
         throw error;
+    }
+};
+
+// API Routes Constants for Voice Assistant
+export const API_ROUTES = {
+    BASE_URL: "http://localhost:3000/api/v1",
+    VOICE_ASSISTANT: {
+        PROCESS: "http://localhost:3000/api/v1/voice/process",
+        QUERY: "http://localhost:3000/api/v1/voice/query",
+        CONTEXT: (patientId: string) => `http://localhost:3000/api/v1/voice/context/${patientId}`,
+        TTS: "http://localhost:3000/api/v1/voice/tts",
     }
 };
 

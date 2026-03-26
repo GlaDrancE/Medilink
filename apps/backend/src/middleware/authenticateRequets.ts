@@ -1,5 +1,6 @@
 import { NextFunction, Request as ExpressRequest, Response } from "express";
-import { createClerkClient, verifyToken } from "@clerk/backend";
+import { verifyToken } from "@clerk/backend";
+import { config } from "@repo/common";
 
 export const authenticateRequest = async (req: ExpressRequest, res: Response, next: NextFunction) => {
     try {
@@ -8,16 +9,18 @@ export const authenticateRequest = async (req: ExpressRequest, res: Response, ne
             return res.status(401).json({ error: "Token not found. User must sign in." });
         }
 
+        // JWT_SECRET holds the Clerk RSA public key (PEM) — verify offline without a network call.
+        // authorizedParties is intentionally omitted so the azp claim is not checked;
+        // this avoids port-mismatch failures across dev / staging / prod environments.
         const verifiedToken = await verifyToken(bearerToken, {
-            jwtKey: process.env.JWT_SECRET,
-            authorizedParties: ["http://localhost:3001", "api.example.com"], // Replace with your authorized parties
+            jwtKey: config.jwt.secret,
         });
-        console.log(verifiedToken)
+
         req.userId = verifiedToken.sub;
         next();
     } catch (error) {
-        console.log('Clerk authentication error:', error);
-        return res.status(401).json({ message: 'Unauthorized' });
+        console.error("Clerk authentication error:", error);
+        return res.status(401).json({ message: "Unauthorized" });
     }
 }
 

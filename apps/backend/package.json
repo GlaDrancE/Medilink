@@ -14,24 +14,31 @@
   },
   "dependencies": {
     "@clerk/backend": "^2.29.2",
+    "@clerk/express": "^2.0.7",
     "@google/generative-ai": "^0.24.1",
     "@repo/cache": "workspace:*",
     "@repo/common": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/axios": "^0.14.4",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
     "@types/nodemailer": "^7.0.4",
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "google-auth-library": "^10.5.0",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
     "nodemailer": "^6.9.0",
     "razorpay": "^2.9.6",
-    "resend": "^6.7.0"
+    "resend": "^6.7.0",
+    "uuid": "^13.0.0"
   }
 }

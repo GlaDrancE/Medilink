@@ -22,7 +22,7 @@ import { Crown } from "lucide-react";
 import { DashboardContent } from "@/components/DashboardContent";
 
 export default function DoctorDashboard() {
-    const auth = useAuth();
+    const { signOut } = useAuth();
     const { user, isLoaded } = useUser();
 
     // Add Patient Modal State
@@ -77,12 +77,6 @@ export default function DoctorDashboard() {
     const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
 
     useEffect(() => {
-        (async () => {
-            const token = await auth.getToken();
-            if (token) {
-                localStorage.setItem("token", token);
-            }
-        })();
         const handleOnline = () => setConnectivity("online");
         const handleOffline = () => setConnectivity("offline");
         window.addEventListener("online", handleOnline);
@@ -91,10 +85,10 @@ export default function DoctorDashboard() {
             window.removeEventListener("online", handleOnline);
             window.removeEventListener("offline", handleOffline);
         };
-    }, [auth]);
+    }, []);
 
     const handleLogout = () => {
-        auth.signOut();
+        signOut();
     };
 
     const handleAddPatient = async (patientData: Prescriptions) => {

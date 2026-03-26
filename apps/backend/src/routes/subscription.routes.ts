@@ -7,12 +7,12 @@ import {
     getSubscriptionHistory,
     checkFeatureAccess
 } from '../controller/subscription.controller';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { authenticateRequest } from '../middleware/authenticateRequets';
 
 const router: Router = Router();
 
 // All subscription routes require authentication
-router.use(authMiddleware as RequestHandler);
+router.use(authenticateRequest as RequestHandler);
 
 /**
  * GET /api/v1/subscription/status

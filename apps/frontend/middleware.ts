@@ -1,6 +1,19 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-export default clerkMiddleware();
+// Routes accessible without a Clerk session
+const isPublicRoute = createRouteMatcher([
+    '/',                        // landing page
+    '/auth/sign-in(.*)',        // Clerk sign-in
+    '/auth/sign-up(.*)',        // Clerk sign-up
+    '/dashboard/patient(.*)',   // patients use their own OTP-based auth
+    '/api/public(.*)',          // any explicitly public API endpoints
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+    if (!isPublicRoute(req)) {
+        await auth.protect();
+    }
+});
 
 export const config = {
     matcher: [

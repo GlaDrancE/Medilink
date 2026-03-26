@@ -7,12 +7,12 @@ import {
     handlePaymentFailure,
     processRefund
 } from '../controller/payment.controller';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { authenticateRequest } from '../middleware/authenticateRequets';
 
 const router: Router = Router();
 
 // All payment routes require authentication
-router.use(authMiddleware as RequestHandler);
+router.use(authenticateRequest as RequestHandler);
 
 /**
  * POST /api/v1/payment/create-order

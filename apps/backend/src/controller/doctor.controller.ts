@@ -1,24 +1,39 @@
 import { Response, Request } from "express";
 import prisma from "@repo/db";
-import { generateToken } from "../utils/jwt";
-import bcrypt from "bcrypt";
+import { createClerkClient } from "@clerk/backend";
 
-const SALT_ROUNDS = 10;
+const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 export const getDoctorById = async (req: Request, res: Response) => {
     try {
         const id = req.userId;
-        const doctor = await prisma.doctor.findUnique({
-            where: {
-                id: id as string
-            }
-        })
+
+        let doctor = await prisma.doctor.findUnique({ where: { id } });
+
         if (!doctor) {
-            return res.status(404).json({ message: "Doctor not found" });
+            // First time the doctor hits the API — provision their record from Clerk
+            const clerkUser = await clerkClient.users.getUser(id);
+            const name =
+                [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+                clerkUser.username ||
+                "Doctor";
+            const email = clerkUser.emailAddresses[0]?.emailAddress || "";
+            const primaryEmailId = clerkUser.primaryEmailAddressId || clerkUser.id;
+
+            doctor = await prisma.doctor.create({
+                data: {
+                    id,
+                    name,
+                    primary_email_address_id: primaryEmailId,
+                    username: clerkUser.username || "",
+                    email,
+                },
+            });
         }
+
         return res.status(200).json(doctor);
     } catch (error) {
-        console.log(error)
+        console.error(error);
         res.status(500).json({ error: (error as Error).message });
     }
 };
@@ -111,36 +126,4 @@ export const getRecentPatients = async (req: Request, res: Response) => {
 
 
 
-export const doctorWebhook = async (req: Request, res: Response) => {
-    try {
-        const body = req.body;
-        if (body.type === "user.created") {
-            const doctor = await prisma.doctor.findUnique({
-                where: {
-                    id: body.data.id
-                }
-            })
-            if (doctor) {
-                res.status(200).json(doctor);
-                return;
-            }
-            else {
-                const doctor = await prisma.doctor.create({
-                    data: {
-                        id: body.data.id,
-                        name: body.data.first_name + " " + body.data.last_name,
-                        primary_email_address_id: body.data.primary_email_address_id || '',
-                        username: body.data.username || '',
-                    }
-                });
-                res.status(200).json(doctor);
-                return;
-            }
-        }
-
-    } catch (error) {
-        console.log(error)
-        res.status(400).json({ error: (error as Error).message });
-    }
-}
 

@@ -1,15 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { DoctorSidebar } from "@/components/DoctorSidebar";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import DoctorProfileWrapper from "@/components/DoctorProfileWrapper";
+import { setDoctorTokenGetter, clearDoctorTokenGetter } from "@/lib/tokenManager";
 
-interface DoctorLayoutProps {
-    children: React.ReactNode;
-}
+export default function DoctorLayout({ children }: { children: React.ReactNode }) {
+    const { getToken } = useAuth();
 
-export default function DoctorLayout({ children }: DoctorLayoutProps) {
+    useEffect(() => {
+        // Register the Clerk token getter so the axios interceptor always gets a fresh token
+        setDoctorTokenGetter(getToken);
+        return () => clearDoctorTokenGetter();
+    }, [getToken]);
+
     return (
         <SubscriptionProvider>
             <div className="flex h-screen bg-gray-50">

@@ -38,8 +38,7 @@ export const PrescriptionWindow = ({ prescription, isRecent = false }: { prescri
                         <div className="space-y-2">
                             {prescription.medicine_list.map((medicine: MedicineEntry, idx: number) => (
                                 <div key={idx} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-100">
-                                    <h4 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-1">{medicine.name}</h4>
-
+                                    <h4 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-1 notranslate">{medicine.name}</h4>
                                     {/* Compact Dosage Grid */}
                                     <div className="grid grid-cols-3 gap-1.5 mb-2">
                                         <div className="bg-white rounded-md p-1.5 text-center border border-blue-200">
