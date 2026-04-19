@@ -34,15 +34,19 @@ export const getPrescription = async (req: Request, res: Response) => {
 
 export const addPrescription = async (req: Request, res: Response) => {
     try {
-        const { patient_id, prescription_text, patient, medicine_list } = req.body;
+        const { patient_id, prescription_text, patient, medicine_list, reason_for_visit } = req.body;
         const userId = req.userId;
+
+        if (!reason_for_visit || !String(reason_for_visit).trim()) {
+            return res.status(400).json({ error: "reason_for_visit is required" });
+        }
 
         const _patient = await prisma.patient.findFirst({
             where: { id: patient_id },
             include: { doctors: { select: { id: true } } },
         });
         let newPatient = null;
-        
+
         const doctor = await prisma.doctor.findUnique({ where: { id: userId } });
 
 
@@ -100,6 +104,7 @@ export const addPrescription = async (req: Request, res: Response) => {
                     doctor_id: userId,
                     prescription_text,
                     is_active: true,
+                    reason_for_visit: String(reason_for_visit).trim(),
                 }
             });
             await tx.medicine.createMany({
@@ -183,7 +188,7 @@ export const getFollowUp = async (req: Request, res: Response) => {
 export const getDoctorPrescriptions = async (req: Request, res: Response) => {
     try {
         const doctorId = req.userId;
-        const page  = Math.max(1, Number(req.query.page)  || 1);
+        const page = Math.max(1, Number(req.query.page) || 1);
         const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
         const search = req.query.search ? String(req.query.search).trim() : undefined;
 

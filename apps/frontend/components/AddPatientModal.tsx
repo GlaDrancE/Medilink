@@ -388,25 +388,28 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
     const validateForm = (): boolean => {
         const newErrors: Partial<PatientData> = {};
 
-        // Required fields validation for new patient
-        if (!formData.name.trim()) {
-            newErrors.name = 'Patient name is required';
+        // Required fields validation for new patient (skip if existing patient pre-filled)
+        if (!patient) {
+            if (!formData.name.trim()) {
+                newErrors.name = 'Patient name is required';
+            }
+            if (!formData.age.trim()) {
+                newErrors.age = 'Patient age is required';
+            } else if (isNaN(Number(formData.age)) || Number(formData.age) <= 0 || Number(formData.age) > 150) {
+                newErrors.age = 'Please enter a valid age (1-150)';
+            }
+            if (!formData.gender) {
+                newErrors.gender = 'Please select gender';
+            }
+            if (!formData.weight.trim()) {
+                newErrors.weight = 'Patient weight is required';
+            } else if (isNaN(Number(formData.weight)) || Number(formData.weight) <= 0) {
+                newErrors.weight = 'Please enter a valid weight';
+            }
         }
-        if (!formData.age.trim()) {
-            newErrors.age = 'Patient age is required';
-        } else if (isNaN(Number(formData.age)) || Number(formData.age) <= 0 || Number(formData.age) > 150) {
-            newErrors.age = 'Please enter a valid age (1-150)';
-        }
-        if (!formData.gender) {
-            newErrors.gender = 'Please select gender';
-        }
-        if (!formData.weight.trim()) {
-            newErrors.weight = 'Patient weight is required';
-        } else if (isNaN(Number(formData.weight)) || Number(formData.weight) <= 0) {
-            newErrors.weight = 'Please enter a valid weight';
-        }
+
         if (!formData.disease.trim()) {
-            newErrors.disease = 'Disease/condition is required';
+            newErrors.disease = 'Reason for visit / condition is required';
         }
         if (medicinesList.length === 0) {
             newErrors.medicines = 'At least one medicine is required';
@@ -454,16 +457,19 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
         e.preventDefault();
 
 
-        // if (!validateForm()) {
-        //     return;
-        // }
+        if (!validateForm()) {
+            return;
+        }
 
         setLoading(true);
         try {
             if (patient && patient.id) {
                 onSubmit({
                     id: '',
-                    ...formData, medicine_list: medicinesList, prescription_text: '',
+                    ...formData,
+                    reason_for_visit: formData.disease.trim(),
+                    medicine_list: medicinesList,
+                    prescription_text: formData.additionalNotes || '',
                     patient: {
                         id: '',
                         phone: phoneNumber,
@@ -474,7 +480,6 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         height: Number(patient.height) || 0,
                         is_active: true,
                     },
-
                     doctor: {
                         id: user?.id || '',
                         name: user?.fullName || '',
@@ -498,6 +503,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                 onSubmit({
                     id: '',
                     ...formData,
+                    reason_for_visit: formData.disease.trim(),
                     patient: {
                         id: '',
                         name: formData.name,
@@ -509,7 +515,7 @@ const AddPatientModal: React.FC<AddPatientModalProps> = ({
                         is_active: true,
                     },
                     medicine_list: medicinesList,
-                    prescription_text: '',
+                    prescription_text: formData.additionalNotes || '',
                     patient_id: '',
                     doctor: {
                         id: user?.id || '',

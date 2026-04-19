@@ -134,6 +134,7 @@ export interface PrescriptionListItem {
     doctor_id: string;
     prescription_date: string;
     prescription_text: string;
+    reason_for_visit: string;
     is_active: boolean;
     follow_up_date: string | null;
     patient: {

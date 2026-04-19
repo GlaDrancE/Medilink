@@ -56,19 +56,19 @@ model Doctor {
 }
 
 model Patient {
-  id              String     @id @default(uuid())
-  name            String?
-  email           String?
-  password        String?
-  phone           String
-  address         String?
-  gender          String?
-  age             Int?
-  weight          Int?
-  date_of_birth   DateTime?
-  blood_group     String?
-  allergies       String[]
-  medical_history String[]
+  id               String     @id @default(uuid())
+  name             String?
+  email            String?
+  password         String?
+  phone            String
+  address          String?
+  gender           String?
+  age              Int?
+  weight           Int?
+  date_of_birth    DateTime?
+  blood_group      String?
+  allergies        String[]
+  medical_history  String[]
   is_active        Boolean    @default(true)
   telegram_chat_id String?    @unique
   doctors          Doctor[]
@@ -111,6 +111,7 @@ model Prescriptions {
   prescription_text String
   is_active         Boolean    @default(true)
   follow_up_date    DateTime?
+  reason_for_visit  String
   patient           Patient    @relation(fields: [patient_id], references: [id], onDelete: Cascade)
   doctor            Doctor     @relation(fields: [doctor_id], references: [id], onDelete: Cascade)
   createdAt         DateTime   @default(now())

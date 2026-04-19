@@ -188,7 +188,7 @@ async function fetchAndCachePatientContext(patientId: string): Promise<Normalise
     const labDocuments = patient.documents
         .filter(doc => doc.type === 'lab' || doc.type === 'lab_report')
         .map(doc => ({
-            name: doc.name,
+            name: doc.name ?? 'Unnamed',
             summary: doc.ai_summary,
             keyFindings: doc.ai_key_findings as string[] | null,
             detectedConditions: doc.ai_detected_conditions as string[] | null,
@@ -199,7 +199,7 @@ async function fetchAndCachePatientContext(patientId: string): Promise<Normalise
     const otherDocuments = patient.documents
         .filter(doc => doc.type !== 'lab' && doc.type !== 'lab_report')
         .map(doc => ({
-            name: doc.name,
+            name: doc.name ?? 'Unnamed',
             summary: doc.ai_summary,
             keyFindings: doc.ai_key_findings as string[] | null,
             detectedConditions: doc.ai_detected_conditions as string[] | null,
@@ -210,7 +210,7 @@ async function fetchAndCachePatientContext(patientId: string): Promise<Normalise
     const normalised: NormalisedPatientContext = {
         profile: {
             id: patient.id,
-            name: patient.name,
+            name: patient.name || '',
             age: patient.age,
             gender: patient.gender,
             blood_group: patient.blood_group,
@@ -223,7 +223,7 @@ async function fetchAndCachePatientContext(patientId: string): Promise<Normalise
             doctorName: rx.doctor?.name ?? 'Unknown',
             medicines: rx.medicine_list.map(m => ({
                 name: m.name,
-                dosage: m.dosage ?? null,
+                dosage: m.dosage as string | null,
                 frequency: null,
             })),
         })),
@@ -256,26 +256,59 @@ export async function analyzePatientQuery(
     // Select only the relevant context slices for this query
     const selection: ContextSelection = selectContext(query, context);
 
-    const prompt = `You are a medical AI assistant. Answer the patient's question using ONLY the data below.
-If something is not in the data, say so — do not guess.
+    const prompt = `You are a medical AI assistant helping a patient understand their own health records.
+Answer the question using ONLY the patient data provided below — do not guess or invent information.
 
---- PATIENT DATA ---
-${selection.text}
---------------------
+=== PATIENT DATA (JSON) ===
+${JSON.stringify(selection.data, null, 2)}
+===========================
 
 QUESTION: ${query}
 
-Rules:
-- Cite specific values or dates from the data when relevant
-- Keep the answer clear and factual
-- End with: "Please consult your doctor before making any changes."`;
+=== FORMATTING RULES ===
+1. MEDICINES / DOSAGE / PRESCRIPTIONS
+   - Always render as a Markdown table with columns relevant to the data available.
+   - Preferred columns (use only those present in the data):
+     | Medicine | Dosage | Frequency / Timing | Prescribed On | Doctor |
+   - If frequency/timing is missing from the data, omit that column.
+
+2. LAB VALUES / TEST RESULTS
+   - Render as a Markdown table:
+     | Test | Value | Reference / Note |
+   - Add a "Note" column only if you can state whether a value is normal/abnormal based on standard ranges.
+
+3. CONDITIONS / DIAGNOSES
+   - Use a bullet list.
+
+4. GENERAL SECTIONS
+   - Use bold headings (e.g. **Medications**, **Lab Results**, **Conditions**) to separate topics.
+   - Keep prose concise — let tables carry the detail.
+
+5. If the data does not contain enough information to answer the question, say so clearly in one sentence.
+
+6. Always end the response with:
+   > ⚠️ Please consult your doctor before making any changes to your treatment.
+
+=== OUTPUT FORMAT ===
+Respond ONLY with a valid JSON object — no markdown fences, no extra text outside the JSON:
+{ "answer": "your fully formatted answer here (use \\n for newlines inside the string)" }`;
 
     const result = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    const text = result.text ?? "I was unable to generate a response. Please try again.";
+    const raw = result.text ?? '';
+    let text: string;
+    try {
+        const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const parsed = JSON.parse(cleaned) as { answer?: unknown };
+        text = typeof parsed.answer === 'string' && parsed.answer.trim()
+            ? parsed.answer
+            : raw;
+    } catch {
+        text = raw || 'I was unable to generate a response. Please try again.';
+    }
 
     return {
         text,
