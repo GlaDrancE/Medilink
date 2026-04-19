@@ -4,7 +4,7 @@ import { getAuthToken } from "@/lib/tokenManager";
 
 const api = axios.create({
     // baseURL: "https://medilink-h77v.onrender.com/api/v1",
-    baseURL: "http://localhost:3000/api/v1",
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
     timeout: 60000,
 });
 
@@ -111,8 +111,8 @@ export const getDoctorPrescriptionList = async (params?: {
 }) => {
     try {
         const query = new URLSearchParams();
-        if (params?.page)   query.set("page",   String(params.page));
-        if (params?.limit)  query.set("limit",  String(params.limit));
+        if (params?.page) query.set("page", String(params.page));
+        if (params?.limit) query.set("limit", String(params.limit));
         if (params?.search?.trim()) query.set("search", params.search.trim());
         const response = await api.get(`/prescription/doctor?${query.toString()}`);
         return response.data as {
