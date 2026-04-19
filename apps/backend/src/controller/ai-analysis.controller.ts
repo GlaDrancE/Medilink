@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { analyzeMedicalDocument, analyzePrescription, analyzeLabReport } from "../services/ai-analysis.service";
+import { analyzeMedicalDocument, analyzePrescription, analyzeLabReport, analyzePatientQuery } from "../services/ai-analysis.service";
 
 export const analyzeDocument = async (req: Request, res: Response) => {
     try {
@@ -66,6 +66,38 @@ export const analyzeDocumentBatch = async (req: Request, res: Response) => {
         res.status(500).json({
             error: "Failed to analyze documents",
             message: (error as Error).message,
+        });
+    }
+};
+
+export const analyzePatientQueryHandler = async (req: Request, res: Response) => {
+    try {
+        const { query, patientId } = req.body;
+
+        if (!query || typeof query !== 'string' || query.trim().length === 0) {
+            return res.status(400).json({ error: "query is required and must be a non-empty string" });
+        }
+
+        if (!patientId || typeof patientId !== 'string') {
+            return res.status(400).json({ error: "patientId is required" });
+        }
+
+        const result = await analyzePatientQuery(query.trim(), patientId);
+
+        res.status(200).json({
+            success: true,
+            text: result.text,
+            contextMeta: result.contextMeta,
+        });
+    } catch (error) {
+        console.error("Patient Query AI Error:", error);
+        const message = (error as Error).message;
+        if (message === "Patient not found") {
+            return res.status(404).json({ error: "Patient not found" });
+        }
+        res.status(500).json({
+            error: "Failed to process patient query",
+            message,
         });
     }
 };

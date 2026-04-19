@@ -1,8 +1,20 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import Navbar from "@/components/Navbar";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import { Manrope, Noto_Serif } from "next/font/google";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const notoSerif = Noto_Serif({
+  subsets: ["latin"],
+  variable: "--font-noto-serif",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "MediLink - Your Trusted Healthcare Platform",
@@ -22,7 +34,7 @@ export default function RootLayout({
 
   return (
     <ClerkProvider publishableKey={publishableKey}>
-      <html lang="en">
+      <html lang="en" className={`${manrope.variable} ${notoSerif.variable}`}>
         <body>
           <ServiceWorkerRegistration />
           {children}

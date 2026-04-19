@@ -1,5 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import prisma from "@repo/db";
+import { PatientContextCache, NormalisedPatientContext } from "./patientContextCache.service";
+import { selectContext, ContextSelection } from "./contextSelector.service";
 
 dotenv.config();
 
@@ -119,6 +122,170 @@ export async function analyzePrescription(imageData: string): Promise<AIAnalysis
 export async function analyzeLabReport(imageData: string): Promise<AIAnalysisResult> {
     const result = await analyzeMedicalDocument(imageData, "lab");
     return result;
+}
+
+export interface PatientQueryResult {
+    text: string;
+    contextMeta: {
+        slicesUsed: string[];
+        fromCache: boolean;
+        prescriptionCount: number;
+        documentCount: number;
+    };
+}
+
+/**
+ * Fetch and normalise patient context from DB, then cache it
+ */
+async function fetchAndCachePatientContext(patientId: string): Promise<NormalisedPatientContext> {
+    const patient = await prisma.patient.findUnique({
+        where: { id: patientId },
+        select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+            blood_group: true,
+            prescriptions: {
+                orderBy: { prescription_date: 'desc' },
+                take: 5,
+                select: {
+                    prescription_date: true,
+                    doctor: { select: { name: true } },
+                    medicine_list: { select: { name: true, dosage: true } },
+                },
+            },
+            documents: {
+                select: {
+                    type: true,
+                    name: true,
+                    ai_summary: true,
+                    ai_key_findings: true,
+                    ai_detected_conditions: true,
+                    ai_medications: true,
+                    ai_lab_values: true,
+                },
+            },
+        },
+    });
+
+    if (!patient) {
+        throw new Error("Patient not found");
+    }
+
+    // Flatten medications from all prescriptions
+    const medicationSet = new Set<string>();
+    patient.prescriptions.forEach(rx => {
+        rx.medicine_list.forEach(m => medicationSet.add(m.name));
+    });
+
+    // Flatten conditions from all documents
+    const conditionSet = new Set<string>();
+    patient.documents.forEach(doc => {
+        (doc.ai_detected_conditions as string[] | null)?.forEach(c => conditionSet.add(c));
+    });
+
+    const labDocuments = patient.documents
+        .filter(doc => doc.type === 'lab' || doc.type === 'lab_report')
+        .map(doc => ({
+            name: doc.name,
+            summary: doc.ai_summary,
+            keyFindings: doc.ai_key_findings as string[] | null,
+            detectedConditions: doc.ai_detected_conditions as string[] | null,
+            medications: doc.ai_medications as string[] | null,
+            labValues: doc.ai_lab_values as Record<string, string> | null,
+        }));
+
+    const otherDocuments = patient.documents
+        .filter(doc => doc.type !== 'lab' && doc.type !== 'lab_report')
+        .map(doc => ({
+            name: doc.name,
+            summary: doc.ai_summary,
+            keyFindings: doc.ai_key_findings as string[] | null,
+            detectedConditions: doc.ai_detected_conditions as string[] | null,
+            medications: doc.ai_medications as string[] | null,
+            labValues: null,
+        }));
+
+    const normalised: NormalisedPatientContext = {
+        profile: {
+            id: patient.id,
+            name: patient.name,
+            age: patient.age,
+            gender: patient.gender,
+            blood_group: patient.blood_group,
+        },
+        medications: Array.from(medicationSet),
+        recentPrescriptions: patient.prescriptions.map(rx => ({
+            date: rx.prescription_date
+                ? new Date(rx.prescription_date).toISOString().split('T')[0]
+                : 'unknown date',
+            doctorName: rx.doctor?.name ?? 'Unknown',
+            medicines: rx.medicine_list.map(m => ({
+                name: m.name,
+                dosage: m.dosage ?? null,
+                frequency: null,
+            })),
+        })),
+        labDocuments,
+        otherDocuments,
+        conditions: Array.from(conditionSet),
+        prescriptionCount: patient.prescriptions.length,
+        documentCount: patient.documents.length,
+    };
+
+    PatientContextCache.set(patientId, normalised);
+    return normalised;
+}
+
+/**
+ * Answer a free-form patient query using cached context + keyword-selected slices
+ */
+export async function analyzePatientQuery(
+    query: string,
+    patientId: string
+): Promise<PatientQueryResult> {
+    // Cache check — DB hit only on miss
+    let fromCache = true;
+    let context = PatientContextCache.get(patientId);
+    if (!context) {
+        fromCache = false;
+        context = await fetchAndCachePatientContext(patientId);
+    }
+
+    // Select only the relevant context slices for this query
+    const selection: ContextSelection = selectContext(query, context);
+
+    const prompt = `You are a medical AI assistant. Answer the patient's question using ONLY the data below.
+If something is not in the data, say so — do not guess.
+
+--- PATIENT DATA ---
+${selection.text}
+--------------------
+
+QUESTION: ${query}
+
+Rules:
+- Cite specific values or dates from the data when relevant
+- Keep the answer clear and factual
+- End with: "Please consult your doctor before making any changes."`;
+
+    const result = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+
+    const text = result.text ?? "I was unable to generate a response. Please try again.";
+
+    return {
+        text,
+        contextMeta: {
+            slicesUsed: selection.slicesUsed,
+            fromCache,
+            prescriptionCount: context.prescriptionCount,
+            documentCount: context.documentCount,
+        },
+    };
 }
 
 /**

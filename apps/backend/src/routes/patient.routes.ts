@@ -11,4 +11,4 @@ router.get("/patient", authMiddleware as RequestHandler, getPatientById);
 router.put("/patient/:id", authMiddleware as RequestHandler, updatePatient);
 router.delete("/patient/:id", authMiddleware as RequestHandler, deletePatient);
 
-export default router; 
+export default router;

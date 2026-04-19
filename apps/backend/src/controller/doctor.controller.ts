@@ -1,6 +1,7 @@
 import { Response, Request } from "express";
 import prisma from "@repo/db";
 import { createClerkClient } from "@clerk/backend";
+import { getDoctorPatients } from "../services/doctor.service";
 
 const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -106,23 +107,38 @@ export const deleteDoctor = async (req: Request, res: Response) => {
 export const getRecentPatients = async (req: Request, res: Response) => {
     try {
         const userId = req.userId;
-        const { page = 1, limit = 10 } = req.query;
-        console.log(userId)
         const patients = await prisma.patient.findMany({
             where: {
-                doctor_id: userId
+                doctors: { some: { id: userId } },
             },
             orderBy: {
                 updatedAt: 'desc'
             },
         });
-        console.log(patients)
         res.status(200).json(patients);
     } catch (error) {
         console.log(error)
         res.status(400).json({ error: (error as Error).message });
     }
 }
+
+export const getAllPatientsForDoctor = async (req: Request, res: Response) => {
+    try {
+        const doctorId = req.userId;
+        const { page, limit, search } = req.query;
+
+        const result = await getDoctorPatients(doctorId, {
+            page: page ? Number(page) : undefined,
+            limit: limit ? Number(limit) : undefined,
+            search: search ? String(search) : undefined,
+        });
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error("getAllPatientsForDoctor error:", error);
+        res.status(500).json({ error: (error as Error).message });
+    }
+};
 
 
 

@@ -11,13 +11,26 @@ import { useAIAnalysis } from "@/hooks/useAIAnalysis";
 import { Patient } from "@/types";
 import AIAnalysisCard from "@/components/AIAnalysisCard";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const PatientLayout = ({ children }: { children: React.ReactNode }) => {
+    const router = useRouter();
     const { patient, setPatient } = usePatient();
     const { activeTab, setActiveTab } = usePatientActiveTab();
     const { currentAnalysis, isAnalyzing, setCurrentAnalysis, setIsAnalyzing, addToHistory, clearCurrentAnalysis } = useAIAnalysis();
     const [uploadStage, setUploadStage] = useState<'uploading' | 'analyzing' | 'complete'>('uploading');
     const [showLoader, setShowLoader] = useState(false);
+    const [tokenChecked, setTokenChecked] = useState(false);
+
+    // Guard: redirect to patient auth if no JWT token in localStorage
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.replace('/auth/patient');
+        } else {
+            setTokenChecked(true);
+        }
+    }, [router]);
 
     const handleCapture = async (file: File, dataUrl: string, type: string) => {
         setIsAnalyzing(true);
@@ -28,21 +41,18 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
             });
 
             if (response) {
-                // Update patient with new document
                 const newDocument = response.document || response.data;
                 setPatient({
                     ...patient as Patient,
                     document_id: newDocument.id,
                     documents: [...(patient?.documents || []), newDocument]
-                })
+                });
 
-                // Set AI analysis if available
                 if (response.aiAnalysis) {
                     setCurrentAnalysis(response.aiAnalysis);
                     addToHistory(newDocument.id, response.aiAnalysis);
                 }
 
-                // Show complete state briefly before hiding loader
                 setTimeout(() => {
                     setShowLoader(false);
                 }, 2000);
@@ -53,36 +63,39 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
         } finally {
             setIsAnalyzing(false);
         }
-    }
+    };
 
     // Clear AI analysis when navigating away
     useEffect(() => {
         if (activeTab !== 'upload') {
-            // Optionally clear after some time
             const timer = setTimeout(() => {
                 clearCurrentAnalysis();
-            }, 10000); // Clear after 10 seconds
+            }, 10000);
             return () => clearTimeout(timer);
         }
     }, [activeTab, clearCurrentAnalysis]);
 
+    if (!tokenChecked) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" aria-label="Loading" />
+            </div>
+        );
+    }
+
     return (
         <>
-            {/* Upload Progress Loader */}
             <UploadLoader isUploading={showLoader} stage={uploadStage} />
 
-            {/* Language Selector - Fixed Position */}
-            <div className="fixed top-4 right-4 z-9999999999">
+            <div className="fixed top-4 right-4 z-9999">
                 <LanguageSelector />
             </div>
 
-            {/* Voice Assistant - Fixed Position Bottom Right */}
             <VoiceAssistant />
 
             <div className={`${showLoader ? 'pt-16' : ''} transition-all duration-300`}>
                 {patient && <PatientHeader patient={patient} />}
 
-                {/* AI Analysis Card - Show when available */}
                 {(currentAnalysis || isAnalyzing) && (
                     <div className="max-w-4xl mx-auto px-4 pt-4">
                         <AIAnalysisCard analysis={currentAnalysis} isLoading={isAnalyzing} />
@@ -93,7 +106,7 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => {
                 <PatientFooter activeTab={activeTab} setActiveTab={setActiveTab} onCapture={handleCapture} />
             </div>
         </>
-    )
-}
+    );
+};
 
 export default PatientLayout;

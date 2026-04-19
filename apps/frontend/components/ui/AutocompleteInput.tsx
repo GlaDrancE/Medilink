@@ -9,55 +9,105 @@ interface AutocompleteInputProps {
     className?: string;
 }
 
-// RxNav API endpoint
-const RXNAV_API_BASE = 'https://rxnav.nlm.nih.gov/REST/drugs.json';
-
 interface DrugHit {
     name: string;
-    synonym?: string;
     rxcui: string;
+    detail?: string;
 }
 
+// ── Source 1: RxNav drugs.json ─────────────────────────────────────────────
+// Returns exact/near-exact drug matches with dose-form details.
+// Searches SCD (generic+dose), SBD (branded), and IN (ingredient) groups.
+const fetchFromDrugsJson = async (query: string): Promise<DrugHit[]> => {
+    const url = `https://rxnav.nlm.nih.gov/REST/drugs.json?name=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const groups: any[] = data?.drugGroup?.conceptGroup ?? [];
+    const hits: DrugHit[] = [];
+    const seen = new Set<string>();
+
+    const addFromGroup = (tty: string, useDetail: boolean) => {
+        const group = groups.find((g: any) => g.tty === tty && Array.isArray(g.conceptProperties));
+        if (!group) return;
+        for (const prop of group.conceptProperties) {
+            // For SBD use the brand synonym as the primary name
+            const displayName: string = tty === 'SBD' && prop.synonym
+                ? prop.synonym
+                : prop.name;
+            if (!displayName) continue;
+            const key = displayName.toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            hits.push({
+                name: displayName,
+                rxcui: prop.rxcui ?? '',
+                detail: useDetail ? prop.name : undefined,
+            });
+        }
+    };
+
+    // Priority: SCD (generic + dose) > SBD (branded) > IN (ingredient)
+    addFromGroup('SCD', false);
+    addFromGroup('SBD', true);
+    addFromGroup('IN', false);
+
+    return hits.slice(0, 12);
+};
+
+// ── Source 2: RxNav approximateTerm ────────────────────────────────────────
+// Fuzzy-matches partial / misspelled queries — fills in when drugs.json
+// returns nothing (e.g. "aspir", "metf", "para").
+const fetchFromApproximateTerm = async (query: string): Promise<DrugHit[]> => {
+    const url = `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(query)}&maxEntries=20`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const candidates: any[] = data?.approximateGroup?.candidate ?? [];
+    const hits: DrugHit[] = [];
+    const seenRxcui = new Set<string>();
+
+    for (const c of candidates) {
+        if (!c.name || !c.rxcui) continue;
+        if (seenRxcui.has(c.rxcui)) continue;
+        seenRxcui.add(c.rxcui);
+        // Normalise casing (API returns ALLCAPS from some sources)
+        const displayName: string =
+            c.name === c.name.toUpperCase()
+                ? c.name.charAt(0).toUpperCase() + c.name.slice(1).toLowerCase()
+                : c.name;
+        hits.push({ name: displayName, rxcui: c.rxcui });
+    }
+
+    return hits.slice(0, 10);
+};
+
+// ── Combined fetcher ────────────────────────────────────────────────────────
 const fetchMedicines = async (query: string): Promise<DrugHit[]> => {
     if (!query || query.trim().length < 2) return [];
-    try {
-        const encodedQuery = encodeURIComponent(query.trim());
-        const url = `${RXNAV_API_BASE}?name=${encodedQuery}`;
+    const q = query.trim();
 
-        const res = await fetch(url);
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
+    const [drugsResult, approxResult] = await Promise.allSettled([
+        fetchFromDrugsJson(q),
+        fetchFromApproximateTerm(q),
+    ]);
+
+    const fromDrugs = drugsResult.status === 'fulfilled' ? drugsResult.value : [];
+    const fromApprox = approxResult.status === 'fulfilled' ? approxResult.value : [];
+
+    // Merge: drugs.json results first (richer), then any new names from approx
+    const seen = new Set<string>(fromDrugs.map((d) => d.name.toLowerCase()));
+    const merged = [...fromDrugs];
+    for (const hit of fromApprox) {
+        if (!seen.has(hit.name.toLowerCase())) {
+            seen.add(hit.name.toLowerCase());
+            merged.push(hit);
         }
-
-        const data = await res.json();
-
-        // Parse RxNav response structure
-        // Find the conceptGroup with tty: "SBD" and extract conceptProperties
-        const drugGroup = data?.drugGroup;
-        if (!drugGroup || !drugGroup.conceptGroup) {
-            return [];
-        }
-
-        const sbdGroup = drugGroup.conceptGroup.find(
-            (group: any) => group.tty === 'SBD' && group.conceptProperties
-        );
-
-        if (!sbdGroup || !Array.isArray(sbdGroup.conceptProperties)) {
-            return [];
-        }
-
-        // Extract drug names from conceptProperties
-        const hits: DrugHit[] = sbdGroup.conceptProperties.map((prop: any) => ({
-            name: prop.name || '',
-            synonym: prop.synonym || undefined,
-            rxcui: prop.rxcui || ''
-        })).filter((hit: DrugHit) => hit.name); // Filter out entries without names
-
-        return hits;
-    } catch (error) {
-        console.error('Error fetching medicines from RxNav:', error);
-        return [];
     }
+
+    return merged.slice(0, 15);
 };
 
 const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
@@ -127,20 +177,19 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                 </div>
             )}
             {showDropdown && suggestions.length > 0 && (
-                <ul className="absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-b-lg shadow max-h-48 overflow-y-auto mt-1">
-                    {suggestions.map((drug, index) => {
-                        // Prefer synonym if available (more user-friendly), otherwise use name
-                        const displayName = drug.synonym || drug.name;
-                        return (
-                            <li
-                                key={`${drug.rxcui}-${index}`}
-                                className="px-4 py-2 hover:bg-green-50 cursor-pointer text-sm text-black"
-                                onMouseDown={() => handleSelect(displayName)}
-                            >
-                                {displayName}
-                            </li>
-                        );
-                    })}
+                <ul className="absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-b-lg shadow max-h-52 overflow-y-auto mt-1">
+                    {suggestions.map((drug, index) => (
+                        <li
+                            key={`${drug.rxcui}-${index}`}
+                            className="px-4 py-2.5 hover:bg-green-50 cursor-pointer text-sm text-black border-b border-gray-100 last:border-0"
+                            onMouseDown={() => handleSelect(drug.name)}
+                        >
+                            <span className="font-medium">{drug.name}</span>
+                            {drug.detail && drug.detail !== drug.name && (
+                                <span className="block text-xs text-gray-500 mt-0.5 truncate">{drug.detail}</span>
+                            )}
+                        </li>
+                    ))}
                 </ul>
             )}
             {error && <div className="text-xs text-red-600 mt-1">{error}</div>}

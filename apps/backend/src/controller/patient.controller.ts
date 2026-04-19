@@ -1,5 +1,6 @@
 import { Response, Request } from "express";
 import prisma from "@repo/db";
+import { PatientContextCache } from "../services/patientContextCache.service";
 
 export const createPatient = async (req: Request, res: Response) => {
     try {
@@ -64,11 +65,11 @@ export const getPatientById = async (req: Request, res: Response) => {
                 }
             }
         });
-        if (!patient) res.status(404).json({ message: "Patient not found" });
-        res.status(200).json(patient);
+        if (!patient) return res.status(404).json({ message: "Patient not found" });
+        return res.status(200).json(patient);
     } catch (error) {
-        console.log(error)
-        res.status(400).json({ error: (error as Error).message });
+        console.log(error);
+        return res.status(400).json({ error: (error as Error).message });
     }
 };
 
@@ -198,6 +199,9 @@ export const uploadDocument = async (req: Request, res: Response) => {
 
             return doc;
         })
+
+        // Invalidate patient context cache so the next AI query reflects the new document
+        PatientContextCache.invalidate(patientId);
 
         res.status(200).json({
             document: newDocument,

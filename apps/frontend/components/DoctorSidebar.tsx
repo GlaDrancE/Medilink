@@ -31,7 +31,7 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     name: 'Patients',
-    href: '/dashboard/doctor/patients',
+    href: '/dashboard/doctor/patient',
     icon: Users,
   },
   {

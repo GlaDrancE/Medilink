@@ -78,6 +78,7 @@ export interface Prescriptions {
     id: string
     index?: number
     disease?: string
+    follow_up_date?: string | null
     nextAppointment?: Date
     patient_id?: string
     doctor_id?: string

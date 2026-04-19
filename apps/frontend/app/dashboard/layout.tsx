@@ -1,18 +1,9 @@
 import AuthProvider from "@/context/auth";
 
-export default function RootLayout({
+export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-
-    return (
-        <html lang="en">
-            <body>
-                <AuthProvider>
-                    {children}
-                </AuthProvider>
-            </body>
-        </html>
-    );
+    return <AuthProvider>{children}</AuthProvider>;
 }

@@ -1,9 +1,9 @@
 "use client"
 import { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, Loader2, MessageSquare, X } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Loader2, MessageSquare, X, Send } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { voiceAssistantService } from '@/services/voiceAssistant.api';
+import { analyzePatientQuery, processVoiceInput as callVoiceInputAPI, API_ROUTES } from '@/services/api.routes';
 import { usePatient } from '@/hooks/usePatient';
 
 interface Message {
@@ -22,7 +22,9 @@ export default function VoiceAssistant() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [transcript, setTranscript] = useState('');
     const [isMuted, setIsMuted] = useState(false);
+    const [textInput, setTextInput] = useState('');
 
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -152,7 +154,7 @@ export default function VoiceAssistant() {
             console.log('Sending transcript to backend:', finalText);
 
             // Send to backend for processing
-            const response = await voiceAssistantService.processVoiceInput(
+            const response = await callVoiceInputAPI(
                 audioBlob,
                 patient.id,
                 finalText || undefined
@@ -239,10 +241,57 @@ export default function VoiceAssistant() {
         setTranscript('');
     };
 
+    const processTextInput = async () => {
+        const query = textInput.trim();
+        if (!query || isProcessing) return;
+        if (!patient?.id) {
+            alert('Please select a patient first');
+            return;
+        }
+
+        setTextInput('');
+        setIsProcessing(true);
+
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            type: 'user',
+            text: query,
+            timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, userMessage]);
+
+        try {
+            const data = await analyzePatientQuery(query, patient.id);
+
+            const assistantMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                type: 'assistant',
+                text: data.text,
+                timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, assistantMessage]);
+        } catch (error) {
+            console.error('Error processing text query:', error);
+            const errorMessage: Message = {
+                id: Date.now().toString(),
+                type: 'assistant',
+                text: 'Sorry, I encountered an error processing your request. Please try again.',
+                timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
     return (
         <>
             {/* Floating Action Button */}
-            <div className="fixed bottom-6 right-6 z-40">
+            <div className="fixed bottom-18 right-1 z-[99999999]">
                 <Button
                     onClick={() => setIsOpen(!isOpen)}
                     className="w-14 h-14 rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 notranslate"
@@ -254,7 +303,7 @@ export default function VoiceAssistant() {
 
             {/* Voice Assistant Panel */}
             {isOpen && (
-                <div className="fixed bottom-24 right-6 w-96 z-40">
+                <div className="fixed bottom-24 right-1 w-96 z-40">
                     <Card className="shadow-2xl border-2 border-purple-200">
                         <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-indigo-50">
                             <div className="flex items-center justify-between">
@@ -297,7 +346,7 @@ export default function VoiceAssistant() {
                                 {messages.length === 0 ? (
                                     <div className="text-center text-gray-500 text-sm py-8">
                                         <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300 notranslate" aria-hidden="true" />
-                                        <p>Click the microphone to start</p>
+                                        <p>Speak or type to get started</p>
                                         <p className="text-xs mt-1">Ask about your medical records, prescriptions, or health data</p>
                                     </div>
                                 ) : (
@@ -320,6 +369,7 @@ export default function VoiceAssistant() {
                                                 </div>
                                             </div>
                                         ))}
+                                        <div ref={messagesEndRef} />
                                     </>
                                 )}
                             </div>
@@ -343,7 +393,28 @@ export default function VoiceAssistant() {
                                 </div>
                             )}
 
-                            {/* Controls */}
+                            {/* Text Input */}
+                            <div className="flex items-center gap-2 mb-2">
+                                <input
+                                    type="text"
+                                    value={textInput}
+                                    onChange={(e) => setTextInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && processTextInput()}
+                                    placeholder="Type your question..."
+                                    disabled={isProcessing || isListening}
+                                    className="flex-1 text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                                <Button
+                                    onClick={processTextInput}
+                                    disabled={!textInput.trim() || isProcessing || isListening}
+                                    className="h-9 w-9 p-0 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 notranslate"
+                                    aria-label="Send"
+                                >
+                                    <Send className="w-4 h-4 notranslate" aria-hidden="true" />
+                                </Button>
+                            </div>
+
+                            {/* Voice Controls */}
                             <div className="flex items-center gap-2">
                                 <Button
                                     onClick={isListening ? stopListening : startListening}

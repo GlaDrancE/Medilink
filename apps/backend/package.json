@@ -34,6 +34,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "google-auth-library": "^10.5.0",
+    "grammy": "^1.42.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "nodemailer": "^6.9.0",

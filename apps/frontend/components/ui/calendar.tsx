@@ -40,6 +40,14 @@ const Calendar: React.FC<CalendarProps> = ({ value, onChange, label, error, disa
         onChange(d.toISOString());
     };
 
+    const now = new Date();
+    const todayDay = now.getDate();
+    const todayMonth = now.getMonth();
+    const todayYear = now.getFullYear();
+    const isCurrentMonth =
+        displayMonth.getMonth() === todayMonth &&
+        displayMonth.getFullYear() === todayYear;
+
     return (
         <div className="w-full" ref={ref}>
             {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
@@ -56,9 +64,20 @@ const Calendar: React.FC<CalendarProps> = ({ value, onChange, label, error, disa
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                                 </svg>
                             </button>
-                            <span className="font-semibold text-lg">
-                                {displayMonth.toLocaleString('default', { month: 'short' }).toUpperCase()} {displayMonth.getFullYear()}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold text-lg">
+                                    {displayMonth.toLocaleString('default', { month: 'short' }).toUpperCase()} {displayMonth.getFullYear()}
+                                </span>
+                                {!isCurrentMonth && (
+                                    <button
+                                        type="button"
+                                        className="text-xs text-purple-600 hover:text-purple-800 underline underline-offset-2 font-medium"
+                                        onClick={() => setDisplayMonth(new Date(todayYear, todayMonth, 1))}
+                                    >
+                                        Today
+                                    </button>
+                                )}
+                            </div>
                             <button
                                 type="button"
                                 className="p-1 rounded hover:bg-gray-100"
@@ -84,18 +103,36 @@ const Calendar: React.FC<CalendarProps> = ({ value, onChange, label, error, disa
                                     selected.getDate() === day &&
                                     selected.getMonth() === displayMonth.getMonth() &&
                                     selected.getFullYear() === displayMonth.getFullYear();
+                                const isToday = isCurrentMonth && day === todayDay;
                                 return (
                                     <button
                                         key={day}
                                         type="button"
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? 'bg-purple-500 text-white' : 'hover:bg-purple-100'} transition`}
+                                        title={isToday ? 'Today' : undefined}
+                                        className={[
+                                            'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition relative',
+                                            isSelected
+                                                ? 'bg-purple-500 text-white shadow-sm'
+                                                : isToday
+                                                    ? 'bg-purple-100 text-purple-700 ring-2 ring-purple-400 ring-offset-1 font-bold hover:bg-purple-200'
+                                                    : 'hover:bg-purple-100 text-gray-700',
+                                        ].join(' ')}
                                         onClick={() => handleDayClick(day)}
                                     >
                                         {day}
+                                        {isToday && !isSelected && (
+                                            <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500" />
+                                        )}
                                     </button>
                                 );
                             })}
                         </div>
+                        {isCurrentMonth && (
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500 border-t pt-2 mt-1">
+                                <span className="w-3 h-3 rounded-full bg-purple-100 ring-2 ring-purple-400 inline-block shrink-0" />
+                                <span>Today — {now.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

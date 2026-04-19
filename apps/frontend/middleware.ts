@@ -3,10 +3,11 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // Routes accessible without a Clerk session
 const isPublicRoute = createRouteMatcher([
     '/',                        // landing page
-    '/auth/sign-in(.*)',        // Clerk sign-in
-    '/auth/sign-up(.*)',        // Clerk sign-up
-    '/dashboard/patient(.*)',   // patients use their own OTP-based auth
-    '/api/public(.*)',          // any explicitly public API endpoints
+    '/auth/sign-in(.*)',        // Clerk sign-in (doctor)
+    '/auth/sign-up(.*)',        // Clerk sign-up (doctor)
+    '/auth/patient(.*)',        // patient phone-based login
+    '/dashboard/patient(.*)',   // patient dashboard — uses its own JWT auth, not Clerk
+    '/api/public(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -17,8 +18,8 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
     matcher: [
-        // Skip Next.js internals and all static files, unless found in search params
-        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+        // Skip Next.js internals and static assets (including video — must bypass Clerk or playback breaks)
+        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|mp4|webm|mov|ogg|m4v)).*)',
         // Always run for API routes
         '/(api|trpc)(.*)',
     ],

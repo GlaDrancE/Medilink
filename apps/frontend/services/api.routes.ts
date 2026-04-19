@@ -104,6 +104,60 @@ export const getPrescription = async () => {
     }
 }
 
+export const getDoctorPrescriptionList = async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+}) => {
+    try {
+        const query = new URLSearchParams();
+        if (params?.page)   query.set("page",   String(params.page));
+        if (params?.limit)  query.set("limit",  String(params.limit));
+        if (params?.search?.trim()) query.set("search", params.search.trim());
+        const response = await api.get(`/prescription/doctor?${query.toString()}`);
+        return response.data as {
+            prescriptions: PrescriptionListItem[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    } catch (error) {
+        throw error;
+    }
+};
+
+export interface PrescriptionListItem {
+    id: string;
+    index: number;
+    patient_id: string;
+    doctor_id: string;
+    prescription_date: string;
+    prescription_text: string;
+    is_active: boolean;
+    follow_up_date: string | null;
+    patient: {
+        id: string;
+        name: string | null;
+        phone: string;
+        age: number | null;
+        gender: string | null;
+        blood_group: string | null;
+    };
+    medicine_list: {
+        id: string;
+        name: string;
+        dosage: { morning: string; afternoon: string; night: string };
+        before_after_food: string;
+    }[];
+    checkups: {
+        id: string;
+        checkup_text: string;
+        checkup_date: string;
+        is_active: boolean;
+    }[];
+}
+
 export const addPrescription = async (data: Prescriptions) => {
     try {
         const response = await api.post(`/prescription`, data)
@@ -120,6 +174,56 @@ export const getRecentPatients = async () => {
         throw error
     }
 }
+
+export const getDoctorFollowUps = async () => {
+    try {
+        const response = await api.get(`/follow-up/me`);
+        return response.data as FollowUpItem[];
+    } catch (error) {
+        throw error;
+    }
+}
+
+export interface FollowUpItem {
+    id: string;
+    patient_id: string;
+    doctor_id: string;
+    prescription_date: string;
+    prescription_text: string;
+    is_active: boolean;
+    follow_up_date: string;
+    patient: {
+        id: string;
+        name: string | null;
+        phone: string;
+        age: number | null;
+        gender: string | null;
+    };
+    medicine_list: { id: string; name: string }[];
+}
+
+export const getDoctorPatients = async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+}) => {
+    try {
+        const query = new URLSearchParams();
+        if (params?.page) query.set("page", String(params.page));
+        if (params?.limit) query.set("limit", String(params.limit));
+        if (params?.search?.trim()) query.set("search", params.search.trim());
+        const response = await api.get(`/doctor/patients?${query.toString()}`);
+        return response.data as {
+            patients: any[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    } catch (error) {
+        throw error;
+    }
+};
 export const updateDoctorProfile = async (data: any) => {
     try {
         const response = await api.put(`/doctor/${data.id}`, data)
@@ -190,6 +294,64 @@ export const analyzeDocumentBatch = async (documents: Array<{ imageData: string;
     }
 };
 
+export const analyzePatientQuery = async (query: string, patientId: string) => {
+    try {
+        const response = await api.post("/ai/patient-query", { query, patientId });
+        return response.data as { success: boolean; text: string; contextMeta: { slicesUsed: string[]; fromCache: boolean; prescriptionCount: number; documentCount: number } };
+    } catch (error) {
+        console.error("Patient query AI error:", error);
+        throw error;
+    }
+};
+
+// Voice Assistant
+export const processVoiceInput = async (audioBlob: Blob, patientId: string, transcript?: string) => {
+    try {
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "voice-input.webm");
+        formData.append("patientId", patientId);
+        if (transcript) formData.append("transcript", transcript);
+
+        const response = await api.post("/voice/process", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Voice input error:", error);
+        throw error;
+    }
+};
+
+export const sendVoiceTextQuery = async (query: string, patientId: string) => {
+    try {
+        const response = await api.post("/voice/query", { query, patientId });
+        return response.data;
+    } catch (error) {
+        console.error("Voice text query error:", error);
+        throw error;
+    }
+};
+
+export const getPatientVoiceContext = async (patientId: string) => {
+    try {
+        const response = await api.get(`/voice/context/${patientId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Voice context error:", error);
+        throw error;
+    }
+};
+
+export const textToSpeech = async (text: string) => {
+    try {
+        const response = await api.post("/voice/tts", { text });
+        return response.data.audioUrl as string;
+    } catch (error) {
+        console.error("TTS error:", error);
+        throw error;
+    }
+};
+
 // API Routes Constants for Voice Assistant
 export const API_ROUTES = {
     BASE_URL: "http://localhost:3000/api/v1",
@@ -198,6 +360,9 @@ export const API_ROUTES = {
         QUERY: "http://localhost:3000/api/v1/voice/query",
         CONTEXT: (patientId: string) => `http://localhost:3000/api/v1/voice/context/${patientId}`,
         TTS: "http://localhost:3000/api/v1/voice/tts",
-    }
+    },
+    AI_ANALYSIS: {
+        PATIENT_QUERY: "http://localhost:3000/api/v1/ai/patient-query",
+    },
 };
 

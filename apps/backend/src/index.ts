@@ -10,6 +10,7 @@ import aiAnalysisRouter from './routes/ai-analysis.routes'
 import voiceRouter from './routes/voice.routes'
 import paymentRouter from './routes/payment.routes'
 import subscriptionRouter from './routes/subscription.routes'
+import { bot } from './bot'
 import { config } from '@repo/common'
 
 const app = express()
@@ -60,3 +61,10 @@ app.get("/", (_req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
 })
+
+// Start Telegram bot using long polling (no webhook setup required)
+if (bot) {
+    bot.start({
+        onStart: (info) => console.log(`Telegram bot @${info.username} started`),
+    }).catch((err) => console.error("[TelegramBot] Failed to start:", err));
+}

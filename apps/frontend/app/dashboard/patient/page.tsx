@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Input from '@/components/ui/input';
@@ -21,7 +22,6 @@ import {
 } from 'lucide-react';
 import { MedicineEntry, Prescriptions, Patient } from '@/types';
 import { getPatientById, getPrescription, uploadDocument, uploadFile } from '@/services/api.routes';
-import { useNavigate } from 'react-router-dom';
 import { useRouter } from 'next/navigation';
 import PatientHome from '@/components/patient/PatientHome';
 import PatientPrescription from '@/components/patient/PatientPrescription';
@@ -70,11 +70,11 @@ const MedicalDashboard = () => {
                 console.log(patient)
                 setPatient(patient as Patient);
 
-            } catch (error: any) {
-                if (error.response.status === 401) {
-                    router.push('/auth/patient');
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    router.replace('/auth/patient');
                 }
-
             }
         };
         fetchPatient();
