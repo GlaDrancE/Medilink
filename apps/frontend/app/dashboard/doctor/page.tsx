@@ -49,6 +49,7 @@ const EMPTY_PRESCRIPTION: Prescriptions = {
         is_approved: false,
         is_rejected: false,
     },
+    reason_for_visit: "",
     disease: "",
     medicine_list: [],
     nextAppointment: new Date(),
