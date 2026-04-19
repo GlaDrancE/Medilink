@@ -421,18 +421,39 @@ export default function Home() {
               workflows through a unified digital experience.
             </p>
 
-            <div style={{ display: 'flex', gap: '0.875rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.875rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
               <button
                 className="btn-primary"
                 style={{ padding: '0.85rem 2.2rem', fontSize: '0.95rem' }}
                 onClick={() => router.push('/dashboard/doctor')}
               >
-                Get Started
+                Get Started — For Doctors
               </button>
               <button className="btn-outline" style={{ padding: '0.85rem 2.2rem', fontSize: '0.95rem' }}>
                 Book a Demo
               </button>
             </div>
+
+            {/* Patient entry point */}
+            <p style={{ fontSize: '0.875rem', color: '#7a7060', marginBottom: '2.5rem' }}>
+              Are you a patient?{' '}
+              <button
+                onClick={() => router.push('/dashboard/patient')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: '#4a7c59',
+                  fontWeight: 600,
+                  fontSize: 'inherit',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: '3px',
+                }}
+              >
+                View your health records →
+              </button>
+            </p>
 
             {/* Trust badge */}
             <p style={{ fontSize: '0.78rem', color: '#8a8070', letterSpacing: '0.04em', marginBottom: '1.5rem' }}>
