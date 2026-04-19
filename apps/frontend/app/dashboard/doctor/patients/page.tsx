@@ -36,7 +36,7 @@ const EMPTY_PRESCRIPTION: Prescriptions = {
     id: "",
     patient: { id: "", phone: "", name: "", age: 0, gender: "", weight: 0, height: 0, is_active: true },
     doctor: { id: "", name: "", is_active: false, is_verified: false, is_approved: false, is_rejected: false },
-    disease: "",
+    reason_for_visit: "",
     medicine_list: [],
     nextAppointment: new Date(),
     prescription_text: "",

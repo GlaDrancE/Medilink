@@ -35,7 +35,7 @@ const EMPTY_PRESCRIPTION: Prescriptions = {
     id: "",
     patient: { id: "", phone: "", name: "", age: 0, gender: "", weight: 0, height: 0, is_active: true },
     doctor: { id: "", name: "", is_active: false, is_verified: false, is_approved: false, is_rejected: false },
-    disease: "",
+    reason_for_visit: "",
     medicine_list: [],
     nextAppointment: new Date(),
     prescription_text: "",
@@ -146,11 +146,10 @@ function PrescriptionRow({ rx }: { rx: PrescriptionListItem }) {
                 {/* Follow-up */}
                 <div className="hidden lg:block shrink-0 text-right">
                     {followUp ? (
-                        <span className={`text-xs font-medium px-2 py-1 rounded ${
-                            isOverdue
+                        <span className={`text-xs font-medium px-2 py-1 rounded ${isOverdue
                                 ? "bg-red-50 text-red-600"
                                 : "bg-green-50 text-green-700"
-                        }`}>
+                            }`}>
                             {isOverdue ? "Missed · " : "Follow-up · "}
                             {followUp.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                         </span>
@@ -162,9 +161,8 @@ function PrescriptionRow({ rx }: { rx: PrescriptionListItem }) {
                 {/* Active badge */}
                 <Badge
                     variant={rx.is_active ? "default" : "outline"}
-                    className={`hidden sm:inline-flex text-xs px-2 shrink-0 ${
-                        rx.is_active ? "bg-green-100 text-green-700 border-green-200" : "text-gray-400"
-                    }`}
+                    className={`hidden sm:inline-flex text-xs px-2 shrink-0 ${rx.is_active ? "bg-green-100 text-green-700 border-green-200" : "text-gray-400"
+                        }`}
                 >
                     {rx.is_active ? "Active" : "Inactive"}
                 </Badge>
@@ -258,17 +256,17 @@ export default function PrescriptionsPage() {
     const { user, isLoaded } = useUser();
 
     const [prescriptions, setPrescriptions] = useState<PrescriptionListItem[]>([]);
-    const [total, setTotal]           = useState(0);
+    const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const [page, setPage]             = useState(1);
-    const [search, setSearch]         = useState("");
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [loading, setLoading]       = useState(true);
-    const [error, setError]           = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const [isModalOpen, setIsModalOpen]   = useState(false);
-    const [formData, setFormData]         = useState<Prescriptions>(EMPTY_PRESCRIPTION);
-    const [formLoading, setFormLoading]   = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState<Prescriptions>(EMPTY_PRESCRIPTION);
+    const [formLoading, setFormLoading] = useState(false);
 
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -333,7 +331,7 @@ export default function PrescriptionsPage() {
     if (!user) return <RedirectToSignIn />;
 
     const startRecord = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-    const endRecord   = Math.min(page * PAGE_SIZE, total);
+    const endRecord = Math.min(page * PAGE_SIZE, total);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
