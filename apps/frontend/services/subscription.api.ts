@@ -1,3 +1,4 @@
+import { getAuthToken } from "@/lib/tokenManager";
 import axios from "axios";
 
 const api = axios.create({
@@ -6,14 +7,14 @@ const api = axios.create({
     timeout: 60000,
 });
 
-// Add token interceptor
 api.interceptors.request.use(async (config) => {
-    const token = localStorage.getItem("token");
+    const token = await getAuthToken();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 });
+
 
 // Subscription API calls
 export const subscriptionApi = {

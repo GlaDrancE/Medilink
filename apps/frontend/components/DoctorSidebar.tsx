@@ -40,19 +40,9 @@ const sidebarItems: SidebarItem[] = [
     icon: FileText,
   },
   {
-    name: 'Notifications',
-    href: '/dashboard/doctor/notifications',
-    icon: Bell,
-  },
-  {
     name: 'Subscription',
     href: '/dashboard/doctor/subscription',
     icon: CreditCard,
-  },
-  {
-    name: 'Settings',
-    href: '/dashboard/doctor/settings',
-    icon: Settings,
   },
 ];
 
