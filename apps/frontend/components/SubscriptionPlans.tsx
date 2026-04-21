@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle, 
-  Crown, 
-  Star, 
-  Zap, 
-  Users, 
-  FileText, 
-  MessageSquare, 
+import {
+  CheckCircle,
+  Crown,
+  Star,
+  Zap,
+  Users,
+  FileText,
+  MessageSquare,
   Headphones,
   BarChart3,
   Layers,
@@ -38,8 +38,8 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     {
       id: 'MONTHLY' as const,
       name: 'Monthly Plan',
-      price: 99,
-      displayPrice: '₹99',
+      price: 499,
+      displayPrice: '₹499',
       period: 'per month',
       description: 'Perfect for getting started with all essential features',
       popular: false,
@@ -97,26 +97,24 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
         <p className="text-lg text-gray-600 mb-6">
           Unlock all premium features and grow your practice
         </p>
-        
+
         {/* Billing Toggle */}
         <div className="inline-flex items-center bg-gray-100 rounded-lg p-1">
           <button
             onClick={() => setSelectedPlan('MONTHLY')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              selectedPlan === 'MONTHLY'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedPlan === 'MONTHLY'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             Monthly
           </button>
           <button
             onClick={() => setSelectedPlan('YEARLY')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              selectedPlan === 'YEARLY'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedPlan === 'YEARLY'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <span>Yearly</span>
             <Badge variant="secondary" className="ml-2 text-xs">
@@ -129,15 +127,14 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         {plans.map((plan) => (
-          <Card 
+          <Card
             key={plan.id}
-            className={`relative transition-all duration-200 ${
-              plan.popular 
-                ? 'border-blue-500 shadow-lg scale-105' 
-                : selectedPlan === plan.id
+            className={`relative transition-all duration-200 ${plan.popular
+              ? 'border-blue-500 shadow-lg scale-105'
+              : selectedPlan === plan.id
                 ? 'border-blue-300 shadow-md'
                 : 'hover:shadow-md'
-            } ${currentPlan === plan.id ? 'ring-2 ring-green-500' : ''}`}
+              } ${currentPlan === plan.id ? 'ring-2 ring-green-500' : ''}`}
           >
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -156,7 +153,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                 </Badge>
               </div>
             )}
-            
+
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-2xl flex items-center justify-center space-x-2">
                 <Crown className="h-6 w-6 text-blue-600" />
@@ -165,7 +162,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
               <CardDescription className="text-base">
                 {plan.description}
               </CardDescription>
-              
+
               <div className="mt-6">
                 <div className="flex items-baseline justify-center space-x-2">
                   <span className="text-5xl font-bold text-gray-900">
@@ -173,7 +170,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                   </span>
                   <span className="text-gray-600 text-lg">{plan.period}</span>
                 </div>
-                
+
                 {plan.savings && (
                   <Badge variant="secondary" className="mt-3">
                     {plan.savings}
@@ -187,7 +184,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                 )}
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-0">
               {/* Features List */}
               <div className="space-y-3 mb-6">
@@ -223,7 +220,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               {/* Action Button */}
               <Button
                 onClick={() => handleSelectPlan(plan.id)}
@@ -348,7 +345,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
             256-bit SSL encryption with Razorpay
           </p>
         </div>
-        
+
         <div className="text-center">
           <div className="bg-green-100 rounded-full p-3 w-12 h-12 mx-auto mb-3 flex items-center justify-center">
             <Clock className="h-6 w-6 text-green-600" />
@@ -358,7 +355,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
             No long-term commitments or hidden fees
           </p>
         </div>
-        
+
         <div className="text-center">
           <div className="bg-purple-100 rounded-full p-3 w-12 h-12 mx-auto mb-3 flex items-center justify-center">
             <Zap className="h-6 w-6 text-purple-600" />
